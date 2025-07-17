@@ -17,6 +17,20 @@ enum PersonType {
   PROJECT_MANAGER
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model Person {
   id        Int        @id @default(autoincrement())
   firstName String
@@ -33,6 +47,10 @@ model Person {
   
   // Relationships with matters
   matters            MatterPerson[]
+  
+  // Relationships with tasks
+  ownedTasks         Task[]   @relation("TaskOwner")
+  assignedTasks      Task[]   @relation("TaskAssignees")
 }
 
 model Client {
@@ -60,6 +78,7 @@ model Matter {
   
   client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   people       MatterPerson[]
+  tasks        Task[]
 }
 
 model MatterPerson {
@@ -72,4 +91,22 @@ model MatterPerson {
   person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
   
   @@unique([matterId, personId])
+}
+
+model Task {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  matterId    Int?         // Optional matter assignment
+  ownerId     Int          // Required task owner
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // Relationships
+  matter      Matter?      @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  owner       Person       @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  assignees   Person[]     @relation("TaskAssignees")
 }

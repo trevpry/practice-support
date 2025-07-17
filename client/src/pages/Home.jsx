@@ -2,42 +2,60 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Users, FileText, User, TrendingUp } from 'lucide-react';
+import { Users, FileText, User, TrendingUp, CheckSquare } from 'lucide-react';
 
 const Home = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
     totalMatters: 0,
     totalPeople: 0,
+    totalTasks: 0,
+    activeTasks: 0,
+    overdueTasks: 0,
     recentClients: [],
     recentMatters: [],
-    recentPeople: []
+    recentPeople: [],
+    recentTasks: []
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [clientsResponse, mattersResponse, peopleResponse] = await Promise.all([
+        const [clientsResponse, mattersResponse, peopleResponse, tasksResponse] = await Promise.all([
           fetch('http://localhost:5001/api/clients'),
           fetch('http://localhost:5001/api/matters'),
-          fetch('http://localhost:5001/api/people')
+          fetch('http://localhost:5001/api/people'),
+          fetch('http://localhost:5001/api/tasks')
         ]);
 
-        if (clientsResponse.ok && mattersResponse.ok && peopleResponse.ok) {
-          const [clients, matters, people] = await Promise.all([
+        if (clientsResponse.ok && mattersResponse.ok && peopleResponse.ok && tasksResponse.ok) {
+          const [clients, matters, people, tasks] = await Promise.all([
             clientsResponse.json(),
             mattersResponse.json(),
-            peopleResponse.json()
+            peopleResponse.json(),
+            tasksResponse.json()
           ]);
+
+          const activeTasks = tasks.filter(task => task.status !== 'COMPLETED').length;
+          const today = new Date();
+          const overdueTasks = tasks.filter(task => 
+            task.dueDate && 
+            new Date(task.dueDate) < today && 
+            task.status !== 'COMPLETED'
+          ).length;
 
           setStats({
             totalClients: clients.length,
             totalMatters: matters.length,
             totalPeople: people.length,
+            totalTasks: tasks.length,
+            activeTasks,
+            overdueTasks,
             recentClients: clients.slice(-5).reverse(),
             recentMatters: matters.slice(-5).reverse(),
-            recentPeople: people.slice(-5).reverse()
+            recentPeople: people.slice(-5).reverse(),
+            recentTasks: tasks.slice(-5).reverse()
           });
         }
       } catch (error) {
@@ -105,12 +123,47 @@ const Home = () => {
           
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center">
-              <TrendingUp className="h-8 w-8 text-orange-600" />
+              <CheckSquare className="h-8 w-8 text-indigo-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">{stats.totalTasks}</p>
+                <p className="text-gray-600">Total Tasks</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Task Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center">
+              <CheckSquare className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">{stats.activeTasks}</p>
+                <p className="text-gray-600">Active Tasks</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center">
+              <CheckSquare className={`h-8 w-8 ${stats.overdueTasks > 0 ? 'text-red-600' : 'text-gray-400'}`} />
+              <div className="ml-4">
+                <p className={`text-2xl font-bold ${stats.overdueTasks > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                  {stats.overdueTasks}
+                </p>
+                <p className="text-gray-600">Overdue Tasks</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.totalClients > 0 ? (stats.totalMatters / stats.totalClients).toFixed(1) : '0'}
+                  {stats.totalTasks > 0 ? Math.round((stats.totalTasks - stats.activeTasks) / stats.totalTasks * 100) : 0}%
                 </p>
-                <p className="text-gray-600">Matters per Client</p>
+                <p className="text-gray-600">Completion Rate</p>
               </div>
             </div>
           </div>
@@ -119,7 +172,7 @@ const Home = () => {
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link to="/clients">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 h-12">
                 <Users className="w-5 h-5 mr-2" />
@@ -138,11 +191,17 @@ const Home = () => {
                 Manage People
               </Button>
             </Link>
+            <Link to="/tasks">
+              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 h-12">
+                <CheckSquare className="w-5 h-5 mr-2" />
+                Manage Tasks
+              </Button>
+            </Link>
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Clients */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Clients</h2>
@@ -221,6 +280,60 @@ const Home = () => {
                     <span className="text-sm text-gray-500">
                       {person.email || 'No email'}
                     </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Recent Tasks */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Tasks</h2>
+            {stats.recentTasks.length === 0 ? (
+              <p className="text-gray-500">No tasks yet</p>
+            ) : (
+              <ul className="space-y-3">
+                {stats.recentTasks.map((task) => (
+                  <li key={task.id} className="p-3 bg-gray-50 rounded-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <Link 
+                        to={`/tasks/${task.id}`}
+                        className="font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {task.title}
+                      </Link>
+                      <div className="flex gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          task.priority === 'URGENT' ? 'text-red-600 bg-red-100' :
+                          task.priority === 'HIGH' ? 'text-orange-600 bg-orange-100' :
+                          task.priority === 'MEDIUM' ? 'text-yellow-600 bg-yellow-100' :
+                          'text-green-600 bg-green-100'
+                        }`}>
+                          {task.priority}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          task.status === 'TODO' ? 'text-gray-600 bg-gray-100' :
+                          task.status === 'IN_PROGRESS' ? 'text-blue-600 bg-blue-100' :
+                          task.status === 'COMPLETED' ? 'text-green-600 bg-green-100' :
+                          'text-yellow-600 bg-yellow-100'
+                        }`}>
+                          {task.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Owner: {task.owner.firstName} {task.owner.lastName}
+                      {task.matter && (
+                        <span className="ml-2">
+                          | <Link 
+                            to={`/matters/${task.matter.id}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {task.matter.matterNumber}
+                          </Link>
+                        </span>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

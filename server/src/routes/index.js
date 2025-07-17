@@ -25,6 +25,16 @@ const {
   deletePerson
 } = require('../controllers/personController');
 
+const {
+  getAllTasks,
+  getTaskById,
+  createTask,
+  updateTask,
+  deleteTask,
+  getTasksByMatter,
+  getTasksByPerson
+} = require('../controllers/taskController');
+
 // Client routes
 router.get('/clients', getClients);
 router.get('/clients/:id', getClient);
@@ -46,6 +56,15 @@ router.get('/people/:id', getPerson);
 router.post('/people', createPerson);
 router.put('/people/:id', updatePerson);
 router.delete('/people/:id', deletePerson);
+
+// Task routes
+router.get('/tasks', getAllTasks);
+router.get('/tasks/:id', getTaskById);
+router.post('/tasks', createTask);
+router.put('/tasks/:id', updateTask);
+router.delete('/tasks/:id', deleteTask);
+router.get('/matters/:matterId/tasks', getTasksByMatter);
+router.get('/people/:personId/tasks', getTasksByPerson);
 
 // Health check route
 router.get('/health', (req, res) => {

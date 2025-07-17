@@ -7,9 +7,11 @@ A comprehensive web application for law firm ediscovery and litigation support t
 - **Client Management**: Track law firm clients with 7-digit client numbers
 - **Matter Management**: Organize matters with 6-digit matter numbers, linked to clients
 - **People Management**: Manage attorneys, paralegals, vendors, and project managers
+- **Task Management**: Create and assign tasks with priorities, due dates, and status tracking
 - **Relationship Tracking**: 
   - Assign attorneys and paralegals to clients
   - Assign team members to specific matters
+  - Link tasks to matters and assign to people
   - Automatic client-person linking when assigned to matters
 - **Detail Views**: Comprehensive detail pages for all entities
 - **Team Management**: Modal interfaces for managing matter teams and person assignments
@@ -105,18 +107,30 @@ This will start both the backend server (port 5001) and frontend development ser
 - `PUT /api/people/:id` - Update person
 - `DELETE /api/people/:id` - Delete person
 
+### Tasks
+- `GET /api/tasks` - Get all tasks
+- `GET /api/tasks/:id` - Get task by ID
+- `POST /api/tasks` - Create new task
+- `PUT /api/tasks/:id` - Update task
+- `DELETE /api/tasks/:id` - Delete task
+- `GET /api/matters/:matterId/tasks` - Get tasks for a specific matter
+- `GET /api/people/:personId/tasks` - Get tasks for a specific person
+
 ## Database Schema
 
 ### Core Models
 - **Person**: Attorneys, paralegals, vendors, project managers
 - **Client**: Law firm clients with unique 7-digit numbers
 - **Matter**: Legal matters with unique 6-digit numbers
+- **Task**: Work items with priorities, due dates, and status tracking
 - **MatterPerson**: Junction table for many-to-many matter-person relationships
 
 ### Relationships
 - Client → Matter (one-to-many)
 - Client → Person (optional attorney/paralegal assignments)
 - Matter → Person (many-to-many via MatterPerson junction table)
+- Matter → Task (one-to-many, optional)
+- Person → Task (one-to-many as owner, many-to-many as assignees)
 
 ## Features in Detail
 
@@ -129,6 +143,15 @@ When a person is assigned to a matter, they are automatically linked to the clie
 - **Matter Detail**: "Manage Team" button opens modal to assign/remove people
 - **Person Detail**: "Manage Matters" button opens modal to assign/remove matters
 - Real-time updates with proper relationship management
+
+### Task Management
+- **Task Creation**: Create tasks with title, description, priority, due date, and status
+- **Task Assignment**: Assign task owners (required) and additional assignees (optional)
+- **Matter Integration**: Link tasks to specific matters for project organization
+- **Priority Levels**: URGENT, HIGH, MEDIUM, LOW with color-coded indicators
+- **Status Tracking**: TODO, IN_PROGRESS, COMPLETED, ON_HOLD
+- **Due Date Tracking**: Visual indicators for overdue tasks
+- **Task Detail Pages**: Comprehensive view with team information and timeline
 
 ### Navigation
 - Clickable entity names throughout the application

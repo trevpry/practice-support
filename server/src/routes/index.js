@@ -49,6 +49,15 @@ const {
 // Organization routes
 const organizationRoutes = require('./organizationRoutes');
 
+// Estimate routes
+const estimateRoutes = require('./estimateRoutes');
+
+// Vendor Agreement routes
+const vendorAgreementRoutes = require('./vendorAgreementRoutes');
+
+// Invoice routes
+const invoiceRoutes = require('./invoiceRoutes');
+
 // Client routes
 router.get('/clients', getClients);
 router.get('/clients/:id', getClient);
@@ -92,6 +101,15 @@ router.get('/auth/current-user', getCurrentUser);
 
 // Organization routes
 router.use('/organizations', organizationRoutes);
+
+// Estimate routes
+router.use('/estimates', estimateRoutes);
+
+// Vendor Agreement routes
+router.use('/vendor-agreements', vendorAgreementRoutes);
+
+// Invoice routes
+router.use('/invoices', invoiceRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {

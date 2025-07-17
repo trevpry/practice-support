@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Plus, Edit, Trash2, FileText, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, FileText, Eye, DollarSign, Receipt, FileSignature } from 'lucide-react';
 
 const Matters = () => {
   const location = useLocation();
@@ -164,6 +164,31 @@ const Matters = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add Matter
           </Button>
+        </div>
+
+        {/* Matter-related sections navigation */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Matter-Related Sections</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/estimates">
+              <Button variant="outline" className="flex items-center">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Estimates
+              </Button>
+            </Link>
+            <Link to="/vendor-agreements">
+              <Button variant="outline" className="flex items-center">
+                <FileSignature className="w-4 h-4 mr-2" />
+                Agreements
+              </Button>
+            </Link>
+            <Link to="/invoices">
+              <Button variant="outline" className="flex items-center">
+                <Receipt className="w-4 h-4 mr-2" />
+                Invoices
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {matters.length === 0 ? (

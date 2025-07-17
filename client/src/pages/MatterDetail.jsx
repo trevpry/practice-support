@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { ArrowLeft, Edit, Trash2, User, Users, Building, X, Plus, CheckSquare, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, User, Users, Building, X, Plus, CheckSquare, Calendar, AlertCircle, DollarSign, FileText } from 'lucide-react';
 
 const MatterDetail = () => {
   const { id } = useParams();
@@ -16,6 +16,9 @@ const MatterDetail = () => {
   const [allPeople, setAllPeople] = useState([]);
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [teamModalLoading, setTeamModalLoading] = useState(false);
+  const [estimates, setEstimates] = useState([]);
+  const [vendorAgreements, setVendorAgreements] = useState([]);
+  const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -63,9 +66,48 @@ const MatterDetail = () => {
       }
     };
 
+    const fetchEstimates = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/api/estimates/matter/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setEstimates(data);
+        }
+      } catch (err) {
+        console.error('Error fetching estimates:', err);
+      }
+    };
+
+    const fetchVendorAgreements = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/api/vendor-agreements/matter/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVendorAgreements(data);
+        }
+      } catch (err) {
+        console.error('Error fetching vendor agreements:', err);
+      }
+    };
+
+    const fetchInvoices = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/api/invoices/matter/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setInvoices(data);
+        }
+      } catch (err) {
+        console.error('Error fetching invoices:', err);
+      }
+    };
+
     fetchCurrentUser();
     fetchMatter();
     fetchTasks();
+    fetchEstimates();
+    fetchVendorAgreements();
+    fetchInvoices();
   }, [id]);
 
   const handleDelete = async () => {
@@ -442,6 +484,211 @@ const MatterDetail = () => {
                       <span>{formatDate(task.dueDate)}</span>
                       {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Matter Estimates */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              Estimates ({estimates.length})
+            </h2>
+            <Link to="/estimates">
+              <Button className="bg-green-600 hover:bg-green-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Estimate
+              </Button>
+            </Link>
+          </div>
+          
+          {estimates.length === 0 ? (
+            <div className="text-center py-12">
+              <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No estimates</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Create estimates from vendors for this matter to track project costs.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {estimates.map((estimate) => (
+                <div key={estimate.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <Link 
+                        to={`/estimates/${estimate.id}`}
+                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {estimate.organization.name} - {estimate.description.substring(0, 100)}
+                        {estimate.description.length > 100 && '...'}
+                      </Link>
+                    </div>
+                    <div className="text-lg font-semibold text-green-600 ml-4">
+                      ${estimate.totalCost.toLocaleString()}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-4 w-4" />
+                      <span>Vendor: {estimate.organization.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Created: {new Date(estimate.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Vendor Agreements */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              Vendor Agreements ({vendorAgreements.length})
+            </h2>
+            <Link to="/vendor-agreements">
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Agreement
+              </Button>
+            </Link>
+          </div>
+          
+          {vendorAgreements.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No vendor agreements</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Create vendor agreements to formalize contracts and terms with vendors.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {vendorAgreements.map((agreement) => (
+                <div key={agreement.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <Link 
+                        to={`/vendor-agreements/${agreement.id}`}
+                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {agreement.organization.name} - {agreement.agreementText.substring(0, 100)}
+                        {agreement.agreementText.length > 100 && '...'}
+                      </Link>
+                    </div>
+                    <div className="text-sm text-gray-600 ml-4">
+                      Signed by: {agreement.signedBy.replace('_', ' ')}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-4 w-4" />
+                      <span>Vendor: {agreement.organization.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Created: {new Date(agreement.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    {agreement.estimate && (
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-4 w-4" />
+                        <span>Related Estimate: ${agreement.estimate.totalCost.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Matter Invoices */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              Invoices ({invoices.length})
+            </h2>
+            <Link to="/invoices">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Invoice
+              </Button>
+            </Link>
+          </div>
+          
+          {invoices.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Track vendor invoices for this matter to manage billing and payments.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {invoices.map((invoice) => (
+                <div key={invoice.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <Link 
+                        to={`/invoices/${invoice.id}`}
+                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {invoice.organization.name} - Invoice #{invoice.id}
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-3 ml-4">
+                      <div className="text-lg font-semibold text-gray-900">
+                        ${invoice.invoiceAmount.toLocaleString()}
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        invoice.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                        invoice.status === 'SUBMITTED' ? 'bg-yellow-100 text-yellow-800' :
+                        invoice.status === 'QUESTION' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {invoice.status === 'RECEIVED' ? 'Received' :
+                         invoice.status === 'SUBMITTED' ? 'Submitted' :
+                         invoice.status === 'QUESTION' ? 'Question' :
+                         invoice.status === 'PAID' ? 'Paid' : invoice.status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-4 w-4" />
+                      <span>Vendor: {invoice.organization.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Invoice Date: {new Date(invoice.invoiceDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {invoice.approved ? (
+                        <CheckSquare className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className={invoice.approved ? 'text-green-600' : 'text-red-600'}>
+                        {invoice.approved ? 'Approved' : 'Pending Approval'}
+                      </span>
+                    </div>
+                    {invoice.estimate && (
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-4 w-4" />
+                        <span>Related Estimate: ${invoice.estimate.totalCost.toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

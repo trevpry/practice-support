@@ -15,6 +15,27 @@ A comprehensive web application for law firm ediscovery and litigation support t
   - **Organization Types**: Current Law Firm, Co-Counsel, Opposing Counsel, Vendor, Third Party
   - **Contact Information**: Full contact details including address and website
   - **People Relationships**: View and manage people linked to each organization
+- **Estimate Management**: Track vendor estimates for matters
+  - **Vendor Integration**: Estimates can only be created for organizations of type "Vendor"
+  - **Matter Linking**: Each estimate is tied to a specific matter
+  - **Cost Tracking**: Store estimate descriptions and total dollar amounts
+  - **Comprehensive Views**: View estimates by matter and organization
+  - **Detail Pages**: Full estimate detail pages with related vendor agreements
+- **Vendor Agreement Management**: Track vendor contracts and agreements
+  - **Vendor Integration**: Agreements can only be created for organizations of type "Vendor"
+  - **Matter Linking**: Each agreement is tied to a specific matter
+  - **Estimate Integration**: Agreements can optionally be linked to specific estimates
+  - **Signature Tracking**: Track who signed the agreement (Project Manager, Partner, Client)
+  - **Agreement Text**: Store full agreement text and terms
+  - **Comprehensive Views**: View agreements by matter and vendor
+- **Invoice Management**: Track vendor invoices and billing
+  - **Vendor Integration**: Invoices can only be created for organizations of type "Vendor"
+  - **Matter Linking**: Each invoice is tied to a specific matter
+  - **Estimate Integration**: Invoices can optionally be linked to specific estimates
+  - **Invoice Tracking**: Track invoice date, amount, approval status, and payment status
+  - **Status Management**: Track invoice workflow: Received, Submitted, Question, Paid
+  - **Approval System**: Mark invoices as approved or pending approval
+  - **Comprehensive Views**: View invoices by matter and vendor
 - **Task Management**: Create and assign tasks with priorities, due dates, and status tracking
 - **User Management**: Create user accounts linked to people for personalized dashboards
 - **Relationship Tracking**: 
@@ -24,6 +45,8 @@ A comprehensive web application for law firm ediscovery and litigation support t
   - Link users to people for filtered task views
   - Automatic client-person linking when assigned to matters
 - **Detail Views**: Comprehensive detail pages for all entities
+  - **Matter Status Display**: Matter status prominently shown at the top of matter detail pages with color-coded badges
+  - **Consistent Status Badges**: Matter status badges displayed across all pages including client details and person assignments
 - **Team Management**: Modal interfaces for managing matter teams and person assignments
 - **Personalized Dashboards**: User-specific filtering showing only clients, matters, and tasks relevant to the current user
 - **Streamlined Interface**: Dashboard shows user-specific data without administrative clutter
@@ -134,6 +157,32 @@ This will start both the backend server (port 5001) and frontend development ser
 - `DELETE /api/organizations/:id` - Delete organization
 - `GET /api/organizations/types` - Get available organization types
 
+### Estimates
+- `GET /api/estimates` - Get all estimates
+- `GET /api/estimates/:id` - Get estimate by ID
+- `GET /api/estimates/matter/:matterId` - Get estimates for a specific matter
+- `POST /api/estimates` - Create new estimate
+- `PUT /api/estimates/:id` - Update estimate
+- `DELETE /api/estimates/:id` - Delete estimate
+
+### Vendor Agreements
+- `GET /api/vendor-agreements` - Get all vendor agreements
+- `GET /api/vendor-agreements/:id` - Get vendor agreement by ID
+- `GET /api/vendor-agreements/matter/:matterId` - Get vendor agreements for a specific matter
+- `GET /api/vendor-agreements/signed-by-options` - Get available signed by options
+- `POST /api/vendor-agreements` - Create new vendor agreement
+- `PUT /api/vendor-agreements/:id` - Update vendor agreement
+- `DELETE /api/vendor-agreements/:id` - Delete vendor agreement
+
+### Invoices
+- `GET /api/invoices` - Get all invoices
+- `GET /api/invoices/:id` - Get invoice by ID
+- `GET /api/invoices/matter/:matterId` - Get invoices for a specific matter
+- `GET /api/invoices/status-options` - Get available invoice status options
+- `POST /api/invoices` - Create new invoice
+- `PUT /api/invoices/:id` - Update invoice
+- `DELETE /api/invoices/:id` - Delete invoice
+
 ### Tasks
 - `GET /api/tasks` - Get all tasks
 - `GET /api/tasks/:id` - Get task by ID
@@ -156,8 +205,12 @@ This will start both the backend server (port 5001) and frontend development ser
 
 ### Core Models
 - **Person**: Attorneys, paralegals, vendors, project managers
+- **Organization**: Companies and entities that people are affiliated with
 - **Client**: Law firm clients with unique 7-digit numbers
 - **Matter**: Legal matters with unique 6-digit numbers
+- **Estimate**: Vendor cost estimates for matters
+- **VendorAgreement**: Vendor contracts and agreements for matters
+- **Invoice**: Vendor invoices for matters with approval and status tracking
 - **Task**: Work items with priorities, due dates, and status tracking
 - **User**: User accounts with optional person linking for personalized views
 - **MatterPerson**: Junction table for many-to-many matter-person relationships
@@ -165,8 +218,17 @@ This will start both the backend server (port 5001) and frontend development ser
 ### Relationships
 - Client → Matter (one-to-many)
 - Client → Person (optional attorney/paralegal assignments)
+- Organization → Person (one-to-many, people belong to organizations)
 - Matter → Person (many-to-many via MatterPerson junction table)
 - Matter → Task (one-to-many, optional)
+- Matter → Estimate (one-to-many)
+- Matter → VendorAgreement (one-to-many)
+- Matter → Invoice (one-to-many)
+- Organization → Estimate (one-to-many, vendors provide estimates)
+- Organization → VendorAgreement (one-to-many, vendors provide agreements)
+- Organization → Invoice (one-to-many, vendors provide invoices)
+- Estimate → VendorAgreement (one-to-many, optional linking)
+- Estimate → Invoice (one-to-many, optional linking)
 - Person → Task (one-to-many as owner, many-to-many as assignees)
 - User → Person (optional one-to-one for personalized filtering)
 

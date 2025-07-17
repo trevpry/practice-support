@@ -9,6 +9,14 @@ import People from './pages/People';
 import PersonDetail from './pages/PersonDetail';
 import Organizations from './pages/Organizations';
 import OrganizationDetail from './pages/OrganizationDetail';
+import Estimates from './pages/Estimates';
+import EstimateDetail from './pages/EstimateDetail';
+import VendorAgreements from './pages/VendorAgreements';
+import VendorAgreementDetail from './pages/VendorAgreementDetail';
+import Invoices from './pages/Invoices';
+import InvoiceDetail from './pages/InvoiceDetail';
+import CreateInvoice from './pages/CreateInvoice';
+import EditInvoice from './pages/EditInvoice';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Users from './pages/Users';
@@ -29,6 +37,14 @@ const App = () => {
         <Route path="/people/:id" element={<PersonDetail />} />
         <Route path="/organizations" element={<Organizations />} />
         <Route path="/organizations/:id" element={<OrganizationDetail />} />
+        <Route path="/estimates" element={<Estimates />} />
+        <Route path="/estimates/:id" element={<EstimateDetail />} />
+        <Route path="/vendor-agreements" element={<VendorAgreements />} />
+        <Route path="/vendor-agreements/:id" element={<VendorAgreementDetail />} />
+        <Route path="/invoices" element={<Invoices />} />
+        <Route path="/invoices/new" element={<CreateInvoice />} />
+        <Route path="/invoices/:id" element={<InvoiceDetail />} />
+        <Route path="/invoices/:id/edit" element={<EditInvoice />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/users" element={<Users />} />

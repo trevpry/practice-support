@@ -16,6 +16,21 @@ const PersonDetail = () => {
   const [selectedMatters, setSelectedMatters] = useState([]);
   const [mattersModalLoading, setMattersModalLoading] = useState(false);
 
+  const getMatterStatusColor = (status) => {
+    switch (status) {
+      case 'COLLECTION': return 'text-blue-600 bg-blue-100';
+      case 'CULLING': return 'text-yellow-600 bg-yellow-100';
+      case 'REVIEW': return 'text-orange-600 bg-orange-100';
+      case 'PRODUCTION': return 'text-green-600 bg-green-100';
+      case 'INACTIVE': return 'text-gray-600 bg-gray-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const formatMatterStatus = (status) => {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
   useEffect(() => {
     const fetchPerson = async () => {
       try {
@@ -401,12 +416,19 @@ const PersonDetail = () => {
               {person.matters.map((matterPerson) => (
                 <div key={matterPerson.matter.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-2">
-                    <Link 
-                      to={`/matters/${matterPerson.matter.id}`}
-                      className="text-lg font-medium text-blue-600 hover:text-blue-800"
-                    >
-                      {matterPerson.matter.matterName}
-                    </Link>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link 
+                          to={`/matters/${matterPerson.matter.id}`}
+                          className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {matterPerson.matter.matterName}
+                        </Link>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMatterStatusColor(matterPerson.matter.status)}`}>
+                          {formatMatterStatus(matterPerson.matter.status)}
+                        </span>
+                      </div>
+                    </div>
                     <FileText className="w-5 h-5 text-gray-400" />
                   </div>
                   <div className="space-y-1">

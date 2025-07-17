@@ -11,6 +11,21 @@ const ClientDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const getMatterStatusColor = (status) => {
+    switch (status) {
+      case 'COLLECTION': return 'text-blue-600 bg-blue-100';
+      case 'CULLING': return 'text-yellow-600 bg-yellow-100';
+      case 'REVIEW': return 'text-orange-600 bg-orange-100';
+      case 'PRODUCTION': return 'text-green-600 bg-green-100';
+      case 'INACTIVE': return 'text-gray-600 bg-gray-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const formatMatterStatus = (status) => {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
   useEffect(() => {
     const fetchClient = async () => {
       try {
@@ -196,12 +211,17 @@ const ClientDetail = () => {
                 <div key={matter.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Link 
-                        to={`/matters/${matter.id}`}
-                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        {matter.matterName}
-                      </Link>
+                      <div className="flex items-center gap-3 mb-2">
+                        <Link 
+                          to={`/matters/${matter.id}`}
+                          className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {matter.matterName}
+                        </Link>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMatterStatusColor(matter.status)}`}>
+                          {formatMatterStatus(matter.status)}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-500">Matter #{matter.matterNumber}</p>
                       <p className="text-sm text-gray-500">Created: {new Date(matter.createdAt).toLocaleDateString()}</p>
                     </div>

@@ -14,6 +14,7 @@ const {
   getMatter,
   createMatter,
   updateMatter,
+  updateMatterStatus,
   deleteMatter
 } = require('../controllers/matterController');
 
@@ -45,6 +46,9 @@ const {
   getCurrentUser
 } = require('../controllers/userController');
 
+// Organization routes
+const organizationRoutes = require('./organizationRoutes');
+
 // Client routes
 router.get('/clients', getClients);
 router.get('/clients/:id', getClient);
@@ -58,6 +62,7 @@ router.get('/matters/:id', getMatter);
 router.get('/clients/:clientId/matters', getMattersByClient);
 router.post('/matters', createMatter);
 router.put('/matters/:id', updateMatter);
+router.put('/matters/:id/status', updateMatterStatus);
 router.delete('/matters/:id', deleteMatter);
 
 // Person routes
@@ -84,6 +89,9 @@ router.post('/users', createUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.get('/auth/current-user', getCurrentUser);
+
+// Organization routes
+router.use('/organizations', organizationRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {

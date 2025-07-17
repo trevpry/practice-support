@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Users, FileText, User, TrendingUp, CheckSquare } from 'lucide-react';
+import { Users, FileText, User, TrendingUp, CheckSquare, LayoutGrid } from 'lucide-react';
 
 // Helper function to check if a task is overdue
 const isOverdue = (dueDate) => {
@@ -75,65 +75,18 @@ const Home = () => {
 
           if (user && user.person) {
             const personId = user.person.id;
-            console.log('Filtering for person ID:', personId);
-            console.log('User object:', user);
-            console.log('All clients:', allClients.length);
-            console.log('All matters:', allMatters.length);
-            console.log('=== CACHE BUSTER v3 ===', new Date().toISOString());
             
             // Filter clients where the user's person is assigned as attorney, paralegal, or project manager
-            filteredClients = allClients.filter(client => {
-              const isAssigned = client.attorneyId === personId || 
-                                client.paralegalId === personId || 
-                                client.projectManagerId === personId;
-              console.log(`Client ${client.name}: attorney=${client.attorneyId}, paralegal=${client.paralegalId}, pm=${client.projectManagerId}, assigned=${isAssigned}`);
-              return isAssigned;
-            });
-            console.log('Filtered clients:', filteredClients.length, 'of', allClients.length);
+            filteredClients = allClients.filter(client => 
+              client.attorneyId === personId || 
+              client.paralegalId === personId || 
+              client.projectManagerId === personId
+            );
 
             // Filter matters where the user's person is assigned to the matter directly
-            filteredMatters = [];
-            
-            console.log(`\n=== MATTER FILTERING DEBUG (DIRECT ASSIGNMENT ONLY) ===`);
-            console.log(`User person ID: ${personId}`);
-            console.log(`Total matters to filter: ${allMatters.length}`);
-            
-            allMatters.forEach((matter, index) => {
-              console.log(`\n--- Matter ${index + 1}: ${matter.title || matter.matterName || 'Unknown'} ---`);
-              
-              // Check ONLY direct matter assignment (ignore client assignments)
-              let isAssignedToMatter = false;
-              if (matter.people && Array.isArray(matter.people)) {
-                console.log(`Matter has ${matter.people.length} people assigned:`);
-                matter.people.forEach((mp, i) => {
-                  const personInMatter = mp.person ? mp.person.id : 'null';
-                  console.log(`  Person ${i + 1}: ID ${personInMatter}`);
-                  if (mp.person && mp.person.id === personId) {
-                    isAssignedToMatter = true;
-                  }
-                });
-              } else {
-                console.log(`Matter has no people array or it's not an array`);
-              }
-              
-              console.log(`Results:`);
-              console.log(`  Assigned to matter: ${isAssignedToMatter}`);
-              console.log(`  Client assignment: IGNORED (per requirement)`);
-              
-              const shouldInclude = isAssignedToMatter; // Only check direct matter assignment
-              console.log(`  INCLUDE MATTER: ${shouldInclude}`);
-              
-              if (shouldInclude) {
-                filteredMatters.push(matter);
-              }
-            });
-            
-            console.log(`\nFinal result: ${filteredMatters.length} of ${allMatters.length} matters included`);
-            console.log(`=== END MATTER FILTERING ===\n`);
-            console.log('Filtered matters:', filteredMatters.length, 'of', allMatters.length);
-          } else {
-            console.log('No user person found, showing all data');
-            console.log('User object:', user);
+            filteredMatters = allMatters.filter(matter => 
+              matter.people && matter.people.some(mp => mp.person && mp.person.id === personId)
+            );
           }
 
           const activeTasks = tasks.filter(task => task.status !== 'COMPLETED').length;
@@ -310,7 +263,7 @@ const Home = () => {
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link to="/clients">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 h-12">
                 <Users className="w-5 h-5 mr-2" />
@@ -333,6 +286,12 @@ const Home = () => {
               <Button className="w-full bg-indigo-600 hover:bg-indigo-700 h-12">
                 <CheckSquare className="w-5 h-5 mr-2" />
                 Manage Tasks
+              </Button>
+            </Link>
+            <Link to="/kanban">
+              <Button className="w-full bg-orange-600 hover:bg-orange-700 h-12">
+                <LayoutGrid className="w-5 h-5 mr-2" />
+                Kanban Board
               </Button>
             </Link>
           </div>

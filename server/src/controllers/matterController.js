@@ -375,11 +375,53 @@ const deleteMatter = async (req, res) => {
   }
 };
 
+// Update matter status only (for Kanban board)
+const updateMatterStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    // Validate status
+    const validStatuses = ['COLLECTION', 'CULLING', 'REVIEW', 'PRODUCTION', 'INACTIVE'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be one of: ' + validStatuses.join(', ') });
+    }
+    
+    // Update matter status
+    const updatedMatter = await prisma.matter.update({
+      where: { id: parseInt(id) },
+      data: { status },
+      include: {
+        client: {
+          include: {
+            attorney: true,
+            paralegal: true,
+            projectManager: true
+          }
+        },
+        people: {
+          include: {
+            person: true
+          }
+        }
+      }
+    });
+    
+    res.json(updatedMatter);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Matter not found' });
+    }
+    res.status(500).json({ error: 'Failed to update matter status' });
+  }
+};
+
 module.exports = {
   getMatters,
   getMattersByClient,
   getMatter,
   createMatter,
   updateMatter,
+  updateMatterStatus,
   deleteMatter
 };

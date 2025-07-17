@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, User, Eye } from 'lucide-react';
 const People = () => {
   const location = useLocation();
   const [people, setPeople] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,7 +17,8 @@ const People = () => {
     lastName: '',
     email: '',
     phone: '',
-    type: ''
+    type: '',
+    organizationId: ''
   });
 
   const personTypes = [
@@ -40,8 +42,21 @@ const People = () => {
     }
   };
 
+  // Fetch organizations
+  const fetchOrganizations = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/organizations');
+      if (!response.ok) throw new Error('Failed to fetch organizations');
+      const data = await response.json();
+      setOrganizations(data);
+    } catch (err) {
+      console.error('Error fetching organizations:', err);
+    }
+  };
+
   useEffect(() => {
     fetchPeople();
+    fetchOrganizations();
   }, []);
 
   // Auto-open edit modal if navigated from detail page
@@ -117,7 +132,8 @@ const People = () => {
       lastName: person.lastName,
       email: person.email || '',
       phone: person.phone || '',
-      type: person.type
+      type: person.type,
+      organizationId: person.organizationId || ''
     });
     setIsModalOpen(true);
   };
@@ -125,7 +141,7 @@ const People = () => {
   // Open modal for creating
   const handleCreate = () => {
     setEditingPerson(null);
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', type: '' });
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', type: '', organizationId: '' });
     setIsModalOpen(true);
   };
 
@@ -183,6 +199,17 @@ const People = () => {
                         </span>
                       </div>
                       <div className="mt-2 flex items-center text-sm text-gray-500 space-x-4">
+                        {person.organization && (
+                          <span className="flex items-center">
+                            <span className="mr-1">🏢</span>
+                            <Link 
+                              to={`/organizations/${person.organization.id}`}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              {person.organization.name}
+                            </Link>
+                          </span>
+                        )}
                         {person.email && (
                           <span className="flex items-center">
                             <span className="mr-1">📧</span>
@@ -311,6 +338,23 @@ const People = () => {
                     {personTypes.map((type) => (
                       <option key={type.value} value={type.value}>
                         {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization
+                  </label>
+                  <select
+                    value={formData.organizationId}
+                    onChange={(e) => setFormData({ ...formData, organizationId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">No organization</option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.name} ({org.type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())})
                       </option>
                     ))}
                   </select>

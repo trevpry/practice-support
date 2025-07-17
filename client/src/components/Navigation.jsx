@@ -49,6 +49,14 @@ const Navigation = () => {
                 People
               </Button>
             </Link>
+            <Link to="/organizations">
+              <Button 
+                variant={isActive('/organizations') ? 'secondary' : 'ghost'}
+                className="text-white hover:bg-blue-800"
+              >
+                Organizations
+              </Button>
+            </Link>
             <Link to="/tasks">
               <Button 
                 variant={isActive('/tasks') ? 'secondary' : 'ghost'}

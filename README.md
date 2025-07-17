@@ -8,7 +8,13 @@ A comprehensive web application for law firm ediscovery and litigation support t
 - **Matter Management**: Organize matters with 6-digit matter numbers, linked to clients
   - **Matter Status Tracking**: Track matter progress through workflow stages: Collection, Culling, Review, Production, Inactive
   - **Status Visualization**: Color-coded status badges for quick identification
+  - **Kanban Board**: Drag-and-drop interface for visual matter status management
 - **People Management**: Manage attorneys, paralegals, vendors, and project managers
+  - **Organization Linking**: Link people to organizations with organizational hierarchy and contact management
+- **Organization Management**: Track organizations that people are affiliated with
+  - **Organization Types**: Current Law Firm, Co-Counsel, Opposing Counsel, Vendor, Third Party
+  - **Contact Information**: Full contact details including address and website
+  - **People Relationships**: View and manage people linked to each organization
 - **Task Management**: Create and assign tasks with priorities, due dates, and status tracking
 - **User Management**: Create user accounts linked to people for personalized dashboards
 - **Relationship Tracking**: 
@@ -120,6 +126,14 @@ This will start both the backend server (port 5001) and frontend development ser
 - `PUT /api/people/:id` - Update person
 - `DELETE /api/people/:id` - Delete person
 
+### Organizations
+- `GET /api/organizations` - Get all organizations
+- `GET /api/organizations/:id` - Get organization by ID
+- `POST /api/organizations` - Create new organization
+- `PUT /api/organizations/:id` - Update organization
+- `DELETE /api/organizations/:id` - Delete organization
+- `GET /api/organizations/types` - Get available organization types
+
 ### Tasks
 - `GET /api/tasks` - Get all tasks
 - `GET /api/tasks/:id` - Get task by ID
@@ -179,6 +193,12 @@ When a person is assigned to a matter, they are automatically linked to the clie
 - **Visual Status Indicators**: Color-coded badges for quick status identification
 - **Dashboard Analytics**: Matter status breakdown showing distribution across all workflow stages
 - **Status Filtering**: Easy identification of matters in each workflow stage
+- **Kanban Board**: Interactive drag-and-drop board for visual matter management
+  - **Drag and Drop**: Move matters between status columns to update their workflow stage
+  - **User-Specific View**: Shows only matters assigned to the current user
+  - **Real-Time Updates**: Status changes are immediately saved to the database
+  - **Visual Status Columns**: Color-coded columns for each workflow stage
+  - **Matter Cards**: Compact cards showing matter details, client info, and team members
 
 ### Task Management
 - **Task Creation**: Create tasks with title, description, priority, due date, and status

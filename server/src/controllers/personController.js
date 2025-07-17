@@ -6,6 +6,7 @@ const getPeople = async (req, res) => {
   try {
     const people = await prisma.person.findMany({
       include: {
+        organization: true,
         clientAttorney: true,
         clientParalegal: true,
         clientProjectManager: true,
@@ -48,6 +49,7 @@ const getPerson = async (req, res) => {
     const person = await prisma.person.findUnique({
       where: { id: parseInt(id) },
       include: {
+        organization: true,
         clientAttorney: {
           include: {
             matters: true
@@ -104,7 +106,7 @@ const getPerson = async (req, res) => {
 // Create a new person
 const createPerson = async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, type, company, role, notes, streetAddress, city, state, zipCode, country, matterIds } = req.body;
+    const { firstName, lastName, email, phone, type, company, role, notes, streetAddress, city, state, zipCode, country, organizationId, matterIds } = req.body;
     
     // Validate input
     if (!firstName || !lastName) {
@@ -122,6 +124,17 @@ const createPerson = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
     
+    // Validate organization exists if provided
+    if (organizationId) {
+      const organization = await prisma.organization.findUnique({
+        where: { id: parseInt(organizationId) }
+      });
+      
+      if (!organization) {
+        return res.status(400).json({ error: 'Invalid organization ID' });
+      }
+    }
+    
     // Create person first
     const person = await prisma.person.create({
       data: {
@@ -137,7 +150,8 @@ const createPerson = async (req, res) => {
         city: city || null,
         state: state || null,
         zipCode: zipCode || null,
-        country: country || null
+        country: country || null,
+        organizationId: organizationId ? parseInt(organizationId) : null
       }
     });
     
@@ -155,6 +169,7 @@ const createPerson = async (req, res) => {
     const completePerson = await prisma.person.findUnique({
       where: { id: person.id },
       include: {
+        organization: true,
         clientAttorney: true,
         clientParalegal: true,
         matterPersons: {
@@ -180,7 +195,7 @@ const createPerson = async (req, res) => {
 const updatePerson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, email, phone, type, company, role, notes, streetAddress, city, state, zipCode, country, matterIds } = req.body;
+    const { firstName, lastName, email, phone, type, company, role, notes, streetAddress, city, state, zipCode, country, organizationId, matterIds } = req.body;
     
     // Validate input
     if (!firstName || !lastName) {
@@ -196,6 +211,17 @@ const updatePerson = async (req, res) => {
     // Validate email format if provided
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
+    }
+    
+    // Validate organization exists if provided
+    if (organizationId) {
+      const organization = await prisma.organization.findUnique({
+        where: { id: parseInt(organizationId) }
+      });
+      
+      if (!organization) {
+        return res.status(400).json({ error: 'Invalid organization ID' });
+      }
     }
     
     // Update person
@@ -214,7 +240,8 @@ const updatePerson = async (req, res) => {
         city: city || null,
         state: state || null,
         zipCode: zipCode || null,
-        country: country || null
+        country: country || null,
+        organizationId: organizationId ? parseInt(organizationId) : null
       }
     });
     
@@ -275,6 +302,7 @@ const updatePerson = async (req, res) => {
     const person = await prisma.person.findUnique({
       where: { id: parseInt(id) },
       include: {
+        organization: true,
         clientAttorney: true,
         clientParalegal: true,
         matterPersons: {

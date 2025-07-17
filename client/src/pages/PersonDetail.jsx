@@ -210,6 +210,23 @@ const PersonDetail = () => {
                 <dt className="text-sm font-medium text-gray-500">Type</dt>
                 <dd className="text-lg text-gray-900">{person.type ? person.type.replace('_', ' ') : 'No type specified'}</dd>
               </div>
+              {person.organization && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Organization</dt>
+                  <dd className="text-lg text-gray-900 flex items-center">
+                    <Building className="w-4 h-4 mr-2 text-gray-400" />
+                    <Link 
+                      to={`/organizations/${person.organization.id}`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {person.organization.name}
+                    </Link>
+                    <span className="ml-2 text-sm text-gray-500">
+                      ({person.organization.type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())})
+                    </span>
+                  </dd>
+                </div>
+              )}
               {person.email && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Email</dt>

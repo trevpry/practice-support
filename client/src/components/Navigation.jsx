@@ -57,6 +57,22 @@ const Navigation = () => {
                 Organizations
               </Button>
             </Link>
+            <Link to="/custodians">
+              <Button 
+                variant={isActive('/custodians') ? 'secondary' : 'ghost'}
+                className="text-white hover:bg-blue-800"
+              >
+                Custodians
+              </Button>
+            </Link>
+            <Link to="/collections">
+              <Button 
+                variant={isActive('/collections') ? 'secondary' : 'ghost'}
+                className="text-white hover:bg-blue-800"
+              >
+                Collections
+              </Button>
+            </Link>
             <Link to="/tasks">
               <Button 
                 variant={isActive('/tasks') ? 'secondary' : 'ghost'}

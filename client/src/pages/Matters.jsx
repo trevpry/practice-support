@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Plus, Edit, Trash2, FileText, Eye, DollarSign, Receipt, FileSignature } from 'lucide-react';
+import { Plus, Edit, Trash2, FileText, Eye, DollarSign, Receipt, FileSignature, Users, Database } from 'lucide-react';
 
 const Matters = () => {
   const location = useLocation();
@@ -186,6 +186,18 @@ const Matters = () => {
               <Button variant="outline" className="flex items-center">
                 <Receipt className="w-4 h-4 mr-2" />
                 Invoices
+              </Button>
+            </Link>
+            <Link to="/custodians">
+              <Button variant="outline" className="flex items-center">
+                <Users className="w-4 h-4 mr-2" />
+                Custodians
+              </Button>
+            </Link>
+            <Link to="/collections">
+              <Button variant="outline" className="flex items-center">
+                <Database className="w-4 h-4 mr-2" />
+                Collections
               </Button>
             </Link>
           </div>

@@ -58,6 +58,12 @@ const vendorAgreementRoutes = require('./vendorAgreementRoutes');
 // Invoice routes
 const invoiceRoutes = require('./invoiceRoutes');
 
+// Custodian routes
+const custodianRoutes = require('./custodianRoutes');
+
+// Collection routes
+const collectionRoutes = require('./collectionRoutes');
+
 // Client routes
 router.get('/clients', getClients);
 router.get('/clients/:id', getClient);
@@ -110,6 +116,12 @@ router.use('/vendor-agreements', vendorAgreementRoutes);
 
 // Invoice routes
 router.use('/invoices', invoiceRoutes);
+
+// Custodian routes
+router.use('/custodians', custodianRoutes);
+
+// Collection routes
+router.use('/collections', collectionRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {

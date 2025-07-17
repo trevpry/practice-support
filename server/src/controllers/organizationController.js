@@ -6,7 +6,8 @@ const OrganizationType = {
   CO_COUNSEL: 'CO_COUNSEL',
   OPPOSING_COUNSEL: 'OPPOSING_COUNSEL',
   VENDOR: 'VENDOR',
-  THIRD_PARTY: 'THIRD_PARTY'
+  THIRD_PARTY: 'THIRD_PARTY',
+  CLIENT: 'CLIENT'
 };
 
 // Get all organizations

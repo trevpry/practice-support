@@ -17,6 +17,14 @@ import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import CreateInvoice from './pages/CreateInvoice';
 import EditInvoice from './pages/EditInvoice';
+import Custodians from './pages/Custodians';
+import CustodianDetail from './pages/CustodianDetail';
+import CreateCustodian from './pages/CreateCustodian';
+import EditCustodian from './pages/EditCustodian';
+import Collections from './pages/Collections';
+import CollectionDetail from './pages/CollectionDetail';
+import CreateCollection from './pages/CreateCollection';
+import EditCollection from './pages/EditCollection';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Users from './pages/Users';
@@ -45,6 +53,14 @@ const App = () => {
         <Route path="/invoices/new" element={<CreateInvoice />} />
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/invoices/:id/edit" element={<EditInvoice />} />
+        <Route path="/custodians" element={<Custodians />} />
+        <Route path="/custodians/new" element={<CreateCustodian />} />
+        <Route path="/custodians/:id" element={<CustodianDetail />} />
+        <Route path="/custodians/:id/edit" element={<EditCustodian />} />
+        <Route path="/collections" element={<Collections />} />
+        <Route path="/collections/new" element={<CreateCollection />} />
+        <Route path="/collections/:id" element={<CollectionDetail />} />
+        <Route path="/collections/:id/edit" element={<EditCollection />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/users" element={<Users />} />

@@ -45,6 +45,7 @@ enum OrganizationType {
   OPPOSING_COUNSEL
   VENDOR
   THIRD_PARTY
+  CLIENT
 }
 
 enum SignedBy {
@@ -58,6 +59,20 @@ enum InvoiceStatus {
   SUBMITTED
   QUESTION
   PAID
+}
+
+enum CollectionStatus {
+  DISCUSSING
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum CollectionType {
+  EMAIL
+  MOBILE
+  COMPUTER
+  OTHER
 }
 
 model Organization {
@@ -81,6 +96,8 @@ model Organization {
   estimates       Estimate[]
   vendorAgreements VendorAgreement[]
   invoices        Invoice[]
+  collections     Collection[]
+  custodians      Custodian[]
 }
 
 model Person {
@@ -145,6 +162,7 @@ model Matter {
   estimates    Estimate[]
   vendorAgreements VendorAgreement[]
   invoices     Invoice[]
+  collections  Collection[]
 }
 
 model MatterPerson {
@@ -242,4 +260,42 @@ model Invoice {
   organization        Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   estimate            Estimate?         @relation(fields: [estimateId], references: [id], onDelete: SetNull)
   vendorAgreement     VendorAgreement?  @relation(fields: [vendorAgreementId], references: [id], onDelete: SetNull)
+}
+
+model Custodian {
+  id              Int           @id @default(autoincrement())
+  name            String        // Name of the custodian
+  email           String?       // Optional email address
+  department      String?       // Optional department
+  title           String?       // Optional job title
+  streetAddress   String?       // Optional street address
+  city            String?       // Optional city
+  state           String?       // Optional state
+  zipCode         String?       // Optional zip code
+  organizationId  Int           // Required organization (usually client)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relationships
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  collections     Collection[]  // Collections for this custodian
+}
+
+model Collection {
+  id              Int               @id @default(autoincrement())
+  status          CollectionStatus  @default(DISCUSSING) // Collection status
+  type            CollectionType    // Type of collection (Email, Mobile, etc.)
+  scheduledDate   DateTime?         // Optional scheduled date
+  completedDate   DateTime?         // Optional completed date
+  notes           String?           // Optional notes
+  matterId        Int               // Required matter assignment
+  organizationId  Int?              // Optional vendor organization
+  custodianId     Int               // Required custodian assignment
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relationships
+  matter          Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  organization    Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  custodian       Custodian         @relation(fields: [custodianId], references: [id], onDelete: Cascade)
 }

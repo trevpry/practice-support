@@ -141,7 +141,7 @@ const createTask = async (req, res) => {
       description,
       status: status || 'TODO',
       priority: priority || 'MEDIUM',
-      dueDate: dueDate ? new Date(dueDate) : null,
+      dueDate: dueDate ? new Date(dueDate + 'T00:00:00') : null,
       matterId: matterId ? parseInt(matterId) : null,
       ownerId: parseInt(ownerId),
     };
@@ -240,7 +240,14 @@ const updateTask = async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
     if (priority !== undefined) updateData.priority = priority;
-    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (dueDate !== undefined) {
+      if (dueDate) {
+        // Parse the date and set it to local time midnight to avoid timezone issues
+        updateData.dueDate = new Date(dueDate + 'T00:00:00');
+      } else {
+        updateData.dueDate = null;
+      }
+    }
     if (matterId !== undefined) updateData.matterId = matterId ? parseInt(matterId) : null;
     if (ownerId !== undefined) updateData.ownerId = parseInt(ownerId);
 

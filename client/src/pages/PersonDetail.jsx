@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { ArrowLeft, Edit, Trash2, User, Building, FileText, Mail, Phone, X, Plus, CheckSquare, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, User, Building, FileText, Mail, Phone, X, Plus } from 'lucide-react';
 
 const PersonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [person, setPerson] = useState(null);
-  const [tasks, setTasks] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMattersModalOpen, setIsMattersModalOpen] = useState(false);
@@ -35,20 +35,20 @@ const PersonDetail = () => {
       }
     };
 
-    const fetchTasks = async () => {
+    const fetchCurrentUser = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/people/${id}/tasks`);
+        const response = await fetch('http://localhost:5001/api/auth/current-user');
         if (response.ok) {
-          const data = await response.json();
-          setTasks(data);
+          const userData = await response.json();
+          setCurrentUser(userData);
         }
       } catch (err) {
-        console.error('Error fetching tasks:', err);
+        console.error('Error fetching current user:', err);
       }
     };
 
     fetchPerson();
-    fetchTasks();
+    fetchCurrentUser();
   }, [id]);
 
   const handleDelete = async () => {
@@ -149,36 +149,6 @@ const PersonDetail = () => {
       case 'PROJECT_MANAGER': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'URGENT': return 'text-red-600 bg-red-100';
-      case 'HIGH': return 'text-orange-600 bg-orange-100';
-      case 'MEDIUM': return 'text-yellow-600 bg-yellow-100';
-      case 'LOW': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'TODO': return 'text-gray-600 bg-gray-100';
-      case 'IN_PROGRESS': return 'text-blue-600 bg-blue-100';
-      case 'COMPLETED': return 'text-green-600 bg-green-100';
-      case 'ON_HOLD': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'No due date';
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const isOverdue = (dueDate) => {
-    if (!dueDate) return false;
-    return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
   };
 
   if (loading) return <Layout><div className="text-center py-8">Loading...</div></Layout>;
@@ -289,8 +259,14 @@ const PersonDetail = () => {
                 </div>
                 <div className="text-sm text-gray-600">Clients as Paralegal</div>
               </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg col-span-2">
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
+                  {person.assignedAsProjectManager?.length || 0}
+                </div>
+                <div className="text-sm text-gray-600">Clients as Project Manager</div>
+              </div>
+              <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                <div className="text-2xl font-bold text-indigo-600">
                   {person.matters?.length || 0}
                 </div>
                 <div className="text-sm text-gray-600">Matter Assignments</div>
@@ -300,11 +276,13 @@ const PersonDetail = () => {
         </div>
 
         {/* Client Assignments */}
-        {((person.assignedAsAttorney?.length || 0) > 0 || (person.assignedAsParalegal?.length || 0) > 0) && (
+        {((person.assignedAsAttorney?.length || 0) > 0 || 
+          (person.assignedAsParalegal?.length || 0) > 0 || 
+          (person.assignedAsProjectManager?.length || 0) > 0) && (
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Client Assignments</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Attorney Assignments */}
               {(person.assignedAsAttorney?.length || 0) > 0 && (
                 <div>
@@ -342,6 +320,30 @@ const PersonDetail = () => {
                         <Link 
                           to={`/clients/${client.id}`}
                           className="text-lg font-medium text-green-600 hover:text-green-800"
+                        >
+                          {client.clientName}
+                        </Link>
+                        <p className="text-sm text-gray-500">Client #{client.clientNumber}</p>
+                        <p className="text-sm text-gray-500">{client.matters.length} matter(s)</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Project Manager Assignments */}
+              {(person.assignedAsProjectManager?.length || 0) > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-purple-600 mb-3 flex items-center">
+                    <User className="w-5 h-5 mr-2" />
+                    Project Manager for {person.assignedAsProjectManager.length} client(s)
+                  </h3>
+                  <div className="space-y-3">
+                    {person.assignedAsProjectManager.map((client) => (
+                      <div key={client.id} className="border border-purple-200 rounded-lg p-3">
+                        <Link 
+                          to={`/clients/${client.id}`}
+                          className="text-lg font-medium text-purple-600 hover:text-purple-800"
                         >
                           {client.clientName}
                         </Link>
@@ -403,88 +405,6 @@ const PersonDetail = () => {
                       >
                         {matterPerson.matter.client.clientName}
                       </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Person Tasks */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              Tasks ({tasks.length})
-            </h2>
-            <Link to="/tasks">
-              <Button className="bg-indigo-600 hover:bg-indigo-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Task
-              </Button>
-            </Link>
-          </div>
-          
-          {tasks.length === 0 ? (
-            <div className="text-center py-12">
-              <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No tasks</h3>
-              <p className="mt-1 text-sm text-gray-500">No tasks owned or assigned to this person.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {tasks.map((task) => (
-                <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <Link 
-                        to={`/tasks/${task.id}`}
-                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        {task.title}
-                      </Link>
-                      {task.description && (
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                        {task.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      <span>
-                        {task.owner.id === person.id ? 'Owner' : 'Assigned'}
-                      </span>
-                    </div>
-                    
-                    {task.matter && (
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" />
-                        <Link 
-                          to={`/matters/${task.matter.id}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {task.matter.matterNumber} - {task.matter.matterName}
-                        </Link>
-                      </div>
-                    )}
-                    
-                    <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-600' : ''}`}>
-                      {isOverdue(task.dueDate) ? (
-                        <AlertCircle className="h-4 w-4" />
-                      ) : (
-                        <Calendar className="h-4 w-4" />
-                      )}
-                      <span>{formatDate(task.dueDate)}</span>
-                      {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
                     </div>
                   </div>
                 </div>

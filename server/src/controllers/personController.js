@@ -8,6 +8,7 @@ const getPeople = async (req, res) => {
       include: {
         clientAttorney: true,
         clientParalegal: true,
+        clientProjectManager: true,
         matterPersons: {
           include: {
             matter: {
@@ -23,7 +24,17 @@ const getPeople = async (req, res) => {
         { firstName: 'asc' }
       ]
     });
-    res.json(people);
+    
+    // Transform the response to match frontend expectations
+    const transformedPeople = people.map(person => ({
+      ...person,
+      matters: person.matterPersons, // Rename matterPersons to matters
+      assignedAsAttorney: person.clientAttorney,
+      assignedAsParalegal: person.clientParalegal,
+      assignedAsProjectManager: person.clientProjectManager
+    }));
+    
+    res.json(transformedPeople);
   } catch (error) {
     console.error('Error fetching people:', error);
     res.status(500).json({ error: 'Failed to fetch people' });
@@ -47,6 +58,11 @@ const getPerson = async (req, res) => {
             matters: true
           }
         },
+        clientProjectManager: {
+          include: {
+            matters: true
+          }
+        },
         matterPersons: {
           include: {
             matter: {
@@ -63,7 +79,22 @@ const getPerson = async (req, res) => {
       return res.status(404).json({ error: 'Person not found' });
     }
     
-    res.json(person);
+    // Transform the response to match frontend expectations
+    const transformedPerson = {
+      ...person,
+      matters: person.matterPersons, // Rename matterPersons to matters
+      assignedAsAttorney: person.clientAttorney,
+      assignedAsParalegal: person.clientParalegal,
+      assignedAsProjectManager: person.clientProjectManager
+    };
+    
+    // Remove the original fields
+    delete transformedPerson.matterPersons;
+    delete transformedPerson.clientAttorney;
+    delete transformedPerson.clientParalegal;
+    delete transformedPerson.clientProjectManager;
+    
+    res.json(transformedPerson);
   } catch (error) {
     console.error('Error fetching person:', error);
     res.status(500).json({ error: 'Failed to fetch person' });

@@ -8,7 +8,8 @@ const getClients = async (req, res) => {
       include: {
         matters: true,
         attorney: true,
-        paralegal: true
+        paralegal: true,
+        projectManager: true
       },
       orderBy: {
         clientName: 'asc'
@@ -29,7 +30,8 @@ const getClient = async (req, res) => {
       include: {
         matters: true,
         attorney: true,
-        paralegal: true
+        paralegal: true,
+        projectManager: true
       }
     });
     
@@ -46,7 +48,7 @@ const getClient = async (req, res) => {
 // Create a new client
 const createClient = async (req, res) => {
   try {
-    const { clientName, clientNumber, attorneyId, paralegalId } = req.body;
+    const { clientName, clientNumber, attorneyId, paralegalId, projectManagerId } = req.body;
     
     // Validate input
     if (!clientName || !clientNumber) {
@@ -76,18 +78,29 @@ const createClient = async (req, res) => {
         return res.status(400).json({ error: 'Invalid paralegal selected' });
       }
     }
+
+    if (projectManagerId) {
+      const projectManager = await prisma.person.findUnique({
+        where: { id: parseInt(projectManagerId) }
+      });
+      if (!projectManager || projectManager.type !== 'PROJECT_MANAGER') {
+        return res.status(400).json({ error: 'Invalid project manager selected' });
+      }
+    }
     
     const client = await prisma.client.create({
       data: {
         clientName,
         clientNumber,
         attorneyId: attorneyId ? parseInt(attorneyId) : null,
-        paralegalId: paralegalId ? parseInt(paralegalId) : null
+        paralegalId: paralegalId ? parseInt(paralegalId) : null,
+        projectManagerId: projectManagerId ? parseInt(projectManagerId) : null
       },
       include: {
         matters: true,
         attorney: true,
-        paralegal: true
+        paralegal: true,
+        projectManager: true
       }
     });
     
@@ -104,7 +117,7 @@ const createClient = async (req, res) => {
 const updateClient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { clientName, clientNumber, attorneyId, paralegalId } = req.body;
+    const { clientName, clientNumber, attorneyId, paralegalId, projectManagerId } = req.body;
     
     // Validate input
     if (!clientName || !clientNumber) {
@@ -135,18 +148,29 @@ const updateClient = async (req, res) => {
       }
     }
     
+    if (projectManagerId) {
+      const projectManager = await prisma.person.findUnique({
+        where: { id: parseInt(projectManagerId) }
+      });
+      if (!projectManager || projectManager.type !== 'PROJECT_MANAGER') {
+        return res.status(400).json({ error: 'Invalid project manager selected' });
+      }
+    }
+    
     const client = await prisma.client.update({
       where: { id: parseInt(id) },
       data: {
         clientName,
         clientNumber,
         attorneyId: attorneyId ? parseInt(attorneyId) : null,
-        paralegalId: paralegalId ? parseInt(paralegalId) : null
+        paralegalId: paralegalId ? parseInt(paralegalId) : null,
+        projectManagerId: projectManagerId ? parseInt(projectManagerId) : null
       },
       include: {
         matters: true,
         attorney: true,
-        paralegal: true
+        paralegal: true,
+        projectManager: true
       }
     });
     

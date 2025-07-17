@@ -9,7 +9,8 @@ const getMatters = async (req, res) => {
         client: {
           include: {
             attorney: true,
-            paralegal: true
+            paralegal: true,
+            projectManager: true
           }
         },
         people: {
@@ -38,7 +39,8 @@ const getMattersByClient = async (req, res) => {
         client: {
           include: {
             attorney: true,
-            paralegal: true
+            paralegal: true,
+            projectManager: true
           }
         }
       },
@@ -62,7 +64,8 @@ const getMatter = async (req, res) => {
         client: {
           include: {
             attorney: true,
-            paralegal: true
+            paralegal: true,
+            projectManager: true
           }
         },
         people: {
@@ -86,7 +89,7 @@ const getMatter = async (req, res) => {
 // Create a new matter
 const createMatter = async (req, res) => {
   try {
-    const { matterName, matterNumber, clientId, peopleIds } = req.body;
+    const { matterName, matterNumber, clientId, status, peopleIds } = req.body;
     
     // Validate input
     if (!matterName || !matterNumber || !clientId) {
@@ -96,6 +99,12 @@ const createMatter = async (req, res) => {
     // Validate matter number format (6 digits)
     if (!/^\d{6}$/.test(matterNumber)) {
       return res.status(400).json({ error: 'Matter number must be exactly 6 digits' });
+    }
+
+    // Validate status if provided
+    const validStatuses = ['COLLECTION', 'CULLING', 'REVIEW', 'PRODUCTION', 'INACTIVE'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be one of: ' + validStatuses.join(', ') });
     }
     
     // Check if client exists
@@ -112,7 +121,8 @@ const createMatter = async (req, res) => {
       data: {
         matterName,
         matterNumber,
-        clientId: parseInt(clientId)
+        clientId: parseInt(clientId),
+        status: status || 'COLLECTION'
       }
     });
     
@@ -124,6 +134,58 @@ const createMatter = async (req, res) => {
           personId: parseInt(personId)
         }))
       });
+      
+      // Auto-link attorneys, paralegals, and project managers to client
+      const assignedPeople = await prisma.person.findMany({
+        where: {
+          id: { in: peopleIds.map(id => parseInt(id)) },
+          type: { in: ['ATTORNEY', 'PARALEGAL', 'PROJECT_MANAGER'] }
+        }
+      });
+      
+      // Get current client data
+      const currentClient = await prisma.client.findUnique({
+        where: { id: parseInt(clientId) },
+        select: { 
+          attorneyId: true, 
+          paralegalId: true, 
+          projectManagerId: true 
+        }
+      });
+      
+      const updateData = {};
+      
+      // Auto-link attorney if none assigned
+      if (!currentClient.attorneyId) {
+        const attorney = assignedPeople.find(p => p.type === 'ATTORNEY');
+        if (attorney) {
+          updateData.attorneyId = attorney.id;
+        }
+      }
+      
+      // Auto-link paralegal if none assigned
+      if (!currentClient.paralegalId) {
+        const paralegal = assignedPeople.find(p => p.type === 'PARALEGAL');
+        if (paralegal) {
+          updateData.paralegalId = paralegal.id;
+        }
+      }
+      
+      // Auto-link project manager if none assigned
+      if (!currentClient.projectManagerId) {
+        const projectManager = assignedPeople.find(p => p.type === 'PROJECT_MANAGER');
+        if (projectManager) {
+          updateData.projectManagerId = projectManager.id;
+        }
+      }
+      
+      // Update client if there are any auto-links to make
+      if (Object.keys(updateData).length > 0) {
+        await prisma.client.update({
+          where: { id: parseInt(clientId) },
+          data: updateData
+        });
+      }
     }
     
     // Fetch the complete matter with relationships
@@ -133,7 +195,8 @@ const createMatter = async (req, res) => {
         client: {
           include: {
             attorney: true,
-            paralegal: true
+            paralegal: true,
+            projectManager: true
           }
         },
         people: {
@@ -157,7 +220,7 @@ const createMatter = async (req, res) => {
 const updateMatter = async (req, res) => {
   try {
     const { id } = req.params;
-    const { matterName, matterNumber, clientId, peopleIds } = req.body;
+    const { matterName, matterNumber, clientId, status, peopleIds } = req.body;
     
     // Validate input
     if (!matterName || !matterNumber || !clientId) {
@@ -167,6 +230,12 @@ const updateMatter = async (req, res) => {
     // Validate matter number format (6 digits)
     if (!/^\d{6}$/.test(matterNumber)) {
       return res.status(400).json({ error: 'Matter number must be exactly 6 digits' });
+    }
+
+    // Validate status if provided
+    const validStatuses = ['COLLECTION', 'CULLING', 'REVIEW', 'PRODUCTION', 'INACTIVE'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be one of: ' + validStatuses.join(', ') });
     }
     
     // Check if client exists
@@ -184,7 +253,8 @@ const updateMatter = async (req, res) => {
       data: {
         matterName,
         matterNumber,
-        clientId: parseInt(clientId)
+        clientId: parseInt(clientId),
+        ...(status && { status })
       }
     });
     
@@ -202,6 +272,58 @@ const updateMatter = async (req, res) => {
           personId: parseInt(personId)
         }))
       });
+      
+      // Auto-link attorneys, paralegals, and project managers to client
+      const assignedPeople = await prisma.person.findMany({
+        where: {
+          id: { in: peopleIds.map(pId => parseInt(pId)) },
+          type: { in: ['ATTORNEY', 'PARALEGAL', 'PROJECT_MANAGER'] }
+        }
+      });
+      
+      // Get current client data
+      const currentClient = await prisma.client.findUnique({
+        where: { id: parseInt(clientId) },
+        select: { 
+          attorneyId: true, 
+          paralegalId: true, 
+          projectManagerId: true 
+        }
+      });
+      
+      const updateData = {};
+      
+      // Auto-link attorney if none assigned
+      if (!currentClient.attorneyId) {
+        const attorney = assignedPeople.find(p => p.type === 'ATTORNEY');
+        if (attorney) {
+          updateData.attorneyId = attorney.id;
+        }
+      }
+      
+      // Auto-link paralegal if none assigned
+      if (!currentClient.paralegalId) {
+        const paralegal = assignedPeople.find(p => p.type === 'PARALEGAL');
+        if (paralegal) {
+          updateData.paralegalId = paralegal.id;
+        }
+      }
+      
+      // Auto-link project manager if none assigned
+      if (!currentClient.projectManagerId) {
+        const projectManager = assignedPeople.find(p => p.type === 'PROJECT_MANAGER');
+        if (projectManager) {
+          updateData.projectManagerId = projectManager.id;
+        }
+      }
+      
+      // Update client if there are any auto-links to make
+      if (Object.keys(updateData).length > 0) {
+        await prisma.client.update({
+          where: { id: parseInt(clientId) },
+          data: updateData
+        });
+      }
     }
     
     // Fetch the complete matter with relationships
@@ -211,7 +333,8 @@ const updateMatter = async (req, res) => {
         client: {
           include: {
             attorney: true,
-            paralegal: true
+            paralegal: true,
+            projectManager: true
           }
         },
         people: {

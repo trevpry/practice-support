@@ -9,6 +9,7 @@ const Clients = () => {
   const [clients, setClients] = useState([]);
   const [attorneys, setAttorneys] = useState([]);
   const [paralegals, setParalegals] = useState([]);
+  const [projectManagers, setProjectManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,7 +18,8 @@ const Clients = () => {
     clientName: '',
     clientNumber: '',
     attorneyId: '',
-    paralegalId: ''
+    paralegalId: '',
+    projectManagerId: ''
   });
 
   // Fetch clients and people
@@ -40,6 +42,7 @@ const Clients = () => {
       setClients(clientsData);
       setAttorneys(peopleData.filter(person => person.type === 'ATTORNEY'));
       setParalegals(peopleData.filter(person => person.type === 'PARALEGAL'));
+      setProjectManagers(peopleData.filter(person => person.type === 'PROJECT_MANAGER'));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -79,7 +82,8 @@ const Clients = () => {
         body: JSON.stringify({
           ...formData,
           attorneyId: formData.attorneyId || null,
-          paralegalId: formData.paralegalId || null
+          paralegalId: formData.paralegalId || null,
+          projectManagerId: formData.projectManagerId || null
         }),
       });
 
@@ -91,7 +95,7 @@ const Clients = () => {
       await fetchData();
       setIsModalOpen(false);
       setEditingClient(null);
-      setFormData({ clientName: '', clientNumber: '', attorneyId: '', paralegalId: '' });
+      setFormData({ clientName: '', clientNumber: '', attorneyId: '', paralegalId: '', projectManagerId: '' });
     } catch (err) {
       setError(err.message);
     }
@@ -123,7 +127,8 @@ const Clients = () => {
       clientName: client.clientName,
       clientNumber: client.clientNumber,
       attorneyId: client.attorneyId || '',
-      paralegalId: client.paralegalId || ''
+      paralegalId: client.paralegalId || '',
+      projectManagerId: client.projectManagerId || ''
     });
     setIsModalOpen(true);
   };
@@ -131,7 +136,7 @@ const Clients = () => {
   // Open modal for creating
   const handleCreate = () => {
     setEditingClient(null);
-    setFormData({ clientName: '', clientNumber: '', attorneyId: '', paralegalId: '' });
+    setFormData({ clientName: '', clientNumber: '', attorneyId: '', paralegalId: '', projectManagerId: '' });
     setIsModalOpen(true);
   };
 
@@ -195,6 +200,16 @@ const Clients = () => {
                               className="text-green-600 hover:text-green-800"
                             >
                               {client.paralegal.firstName} {client.paralegal.lastName}
+                            </Link>
+                          </span>
+                        )}
+                        {client.projectManager && (
+                          <span>
+                            PM: <Link 
+                              to={`/people/${client.projectManager.id}`}
+                              className="text-purple-600 hover:text-purple-800"
+                            >
+                              {client.projectManager.firstName} {client.projectManager.lastName}
                             </Link>
                           </span>
                         )}
@@ -297,6 +312,23 @@ const Clients = () => {
                     {paralegals.map((paralegal) => (
                       <option key={paralegal.id} value={paralegal.id}>
                         {paralegal.firstName} {paralegal.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Project Manager
+                  </label>
+                  <select
+                    value={formData.projectManagerId}
+                    onChange={(e) => setFormData({ ...formData, projectManagerId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a project manager...</option>
+                    {projectManagers.map((projectManager) => (
+                      <option key={projectManager.id} value={projectManager.id}>
+                        {projectManager.firstName} {projectManager.lastName}
                       </option>
                     ))}
                   </select>

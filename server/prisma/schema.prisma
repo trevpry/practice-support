@@ -31,6 +31,14 @@ enum TaskPriority {
   URGENT
 }
 
+enum MatterStatus {
+  COLLECTION
+  CULLING
+  REVIEW
+  PRODUCTION
+  INACTIVE
+}
+
 model Person {
   id             Int          @id @default(autoincrement())
   firstName      String
@@ -50,36 +58,40 @@ model Person {
   updatedAt      DateTime     @updatedAt
 
   // Relationships
-  ownedTasks     Task[]         @relation("TaskOwner")
-  assignedTasks  Task[]         @relation("TaskAssignees")
-  clientAttorney Client[]       @relation("ClientAttorney")
-  clientParalegal Client[]      @relation("ClientParalegal")
-  matterPersons  MatterPerson[]
-  user           User?          // Optional relationship with User
+  ownedTasks          Task[]         @relation("TaskOwner")
+  assignedTasks       Task[]         @relation("TaskAssignees")
+  clientAttorney      Client[]       @relation("ClientAttorney")
+  clientParalegal     Client[]       @relation("ClientParalegal")
+  clientProjectManager Client[]      @relation("ClientProjectManager")
+  matterPersons       MatterPerson[]
+  user                User?          // Optional relationship with User
 }
 
 model Client {
-  id           Int      @id @default(autoincrement())
-  clientName   String
-  clientNumber String   @unique // 7-digit client number
-  attorneyId   Int?     // Optional attorney assigned to client
-  paralegalId  Int?     // Optional paralegal assigned to client
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  matters      Matter[]
+  id              Int      @id @default(autoincrement())
+  clientName      String
+  clientNumber    String   @unique // 7-digit client number
+  attorneyId      Int?     // Optional attorney assigned to client
+  paralegalId     Int?     // Optional paralegal assigned to client
+  projectManagerId Int?    // Optional project manager assigned to client
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  matters         Matter[]
   
   // Relationships with people
-  attorney     Person?  @relation("ClientAttorney", fields: [attorneyId], references: [id])
-  paralegal    Person?  @relation("ClientParalegal", fields: [paralegalId], references: [id])
+  attorney        Person?  @relation("ClientAttorney", fields: [attorneyId], references: [id])
+  paralegal       Person?  @relation("ClientParalegal", fields: [paralegalId], references: [id])
+  projectManager  Person?  @relation("ClientProjectManager", fields: [projectManagerId], references: [id])
 }
 
 model Matter {
-  id           Int      @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   matterName   String
-  matterNumber String   @unique // 6-digit matter number
+  matterNumber String       @unique // 6-digit matter number
+  status       MatterStatus @default(COLLECTION)
   clientId     Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   
   client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   people       MatterPerson[]

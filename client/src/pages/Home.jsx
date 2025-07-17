@@ -4,6 +4,36 @@ import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { Users, FileText, User, TrendingUp, CheckSquare } from 'lucide-react';
 
+// Helper function to check if a task is overdue
+const isOverdue = (dueDate) => {
+  if (!dueDate) return false;
+  const today = new Date();
+  const taskDate = new Date(dueDate);
+  
+  // Set both dates to midnight for accurate comparison
+  today.setHours(0, 0, 0, 0);
+  taskDate.setHours(0, 0, 0, 0);
+  
+  return taskDate < today;
+};
+
+// Format matter status for display
+const formatMatterStatus = (status) => {
+  return status ? status.charAt(0) + status.slice(1).toLowerCase() : 'Collection';
+};
+
+// Get matter status color
+const getMatterStatusColor = (status) => {
+  switch (status) {
+    case 'COLLECTION': return 'bg-blue-100 text-blue-800';
+    case 'CULLING': return 'bg-yellow-100 text-yellow-800';
+    case 'REVIEW': return 'bg-orange-100 text-orange-800';
+    case 'PRODUCTION': return 'bg-green-100 text-green-800';
+    case 'INACTIVE': return 'bg-gray-100 text-gray-800';
+    default: return 'bg-blue-100 text-blue-800';
+  }
+};
+
 const Home = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -11,6 +41,7 @@ const Home = () => {
     totalTasks: 0,
     activeTasks: 0,
     overdueTasks: 0,
+    matterStatusCounts: {},
     recentClients: [],
     recentMatters: [],
     recentTasks: []
@@ -45,36 +76,79 @@ const Home = () => {
           if (user && user.person) {
             const personId = user.person.id;
             console.log('Filtering for person ID:', personId);
+            console.log('User object:', user);
+            console.log('All clients:', allClients.length);
+            console.log('All matters:', allMatters.length);
+            console.log('=== CACHE BUSTER v3 ===', new Date().toISOString());
             
-            // Filter clients where the user's person is assigned as attorney or paralegal
-            filteredClients = allClients.filter(client => 
-              client.attorneyId === personId || client.paralegalId === personId
-            );
+            // Filter clients where the user's person is assigned as attorney, paralegal, or project manager
+            filteredClients = allClients.filter(client => {
+              const isAssigned = client.attorneyId === personId || 
+                                client.paralegalId === personId || 
+                                client.projectManagerId === personId;
+              console.log(`Client ${client.name}: attorney=${client.attorneyId}, paralegal=${client.paralegalId}, pm=${client.projectManagerId}, assigned=${isAssigned}`);
+              return isAssigned;
+            });
             console.log('Filtered clients:', filteredClients.length, 'of', allClients.length);
 
-            // Filter matters where the user's person is assigned to the matter OR to the client
-            filteredMatters = allMatters.filter(matter => {
-              // Check if person is directly assigned to the matter
-              const isAssignedToMatter = matter.people && matter.people.some(mp => mp.person.id === personId);
+            // Filter matters where the user's person is assigned to the matter directly
+            filteredMatters = [];
+            
+            console.log(`\n=== MATTER FILTERING DEBUG (DIRECT ASSIGNMENT ONLY) ===`);
+            console.log(`User person ID: ${personId}`);
+            console.log(`Total matters to filter: ${allMatters.length}`);
+            
+            allMatters.forEach((matter, index) => {
+              console.log(`\n--- Matter ${index + 1}: ${matter.title || matter.matterName || 'Unknown'} ---`);
               
-              // Check if person is assigned to the client (attorney or paralegal)
-              const isAssignedToClient = matter.client && 
-                (matter.client.attorneyId === personId || matter.client.paralegalId === personId);
+              // Check ONLY direct matter assignment (ignore client assignments)
+              let isAssignedToMatter = false;
+              if (matter.people && Array.isArray(matter.people)) {
+                console.log(`Matter has ${matter.people.length} people assigned:`);
+                matter.people.forEach((mp, i) => {
+                  const personInMatter = mp.person ? mp.person.id : 'null';
+                  console.log(`  Person ${i + 1}: ID ${personInMatter}`);
+                  if (mp.person && mp.person.id === personId) {
+                    isAssignedToMatter = true;
+                  }
+                });
+              } else {
+                console.log(`Matter has no people array or it's not an array`);
+              }
               
-              return isAssignedToMatter || isAssignedToClient;
+              console.log(`Results:`);
+              console.log(`  Assigned to matter: ${isAssignedToMatter}`);
+              console.log(`  Client assignment: IGNORED (per requirement)`);
+              
+              const shouldInclude = isAssignedToMatter; // Only check direct matter assignment
+              console.log(`  INCLUDE MATTER: ${shouldInclude}`);
+              
+              if (shouldInclude) {
+                filteredMatters.push(matter);
+              }
             });
+            
+            console.log(`\nFinal result: ${filteredMatters.length} of ${allMatters.length} matters included`);
+            console.log(`=== END MATTER FILTERING ===\n`);
             console.log('Filtered matters:', filteredMatters.length, 'of', allMatters.length);
           } else {
             console.log('No user person found, showing all data');
+            console.log('User object:', user);
           }
 
           const activeTasks = tasks.filter(task => task.status !== 'COMPLETED').length;
-          const today = new Date();
           const overdueTasks = tasks.filter(task => 
             task.dueDate && 
-            new Date(task.dueDate) < today && 
+            isOverdue(task.dueDate) && 
             task.status !== 'COMPLETED'
           ).length;
+
+          // Calculate matter status breakdown
+          const matterStatusCounts = filteredMatters.reduce((acc, matter) => {
+            const status = matter.status || 'COLLECTION';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          }, {});
 
           setStats({
             totalClients: filteredClients.length,
@@ -82,6 +156,7 @@ const Home = () => {
             totalTasks: tasks.length,
             activeTasks,
             overdueTasks,
+            matterStatusCounts,
             recentClients: filteredClients.slice(-5).reverse(),
             recentMatters: filteredMatters.slice(-5).reverse(),
             recentTasks: tasks.slice(-5).reverse()
@@ -211,6 +286,27 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Matter Status Overview */}
+        {stats.totalMatters > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {currentUser && currentUser.person ? "My Matters by Status" : "Matters by Status"}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {['COLLECTION', 'CULLING', 'REVIEW', 'PRODUCTION', 'INACTIVE'].map(status => (
+                <div key={status} className="text-center">
+                  <div className={`px-3 py-2 rounded-full text-sm font-medium ${getMatterStatusColor(status)}`}>
+                    {formatMatterStatus(status)}
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">
+                    {stats.matterStatusCounts[status] || 0}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
@@ -288,13 +384,18 @@ const Home = () => {
               <ul className="space-y-3">
                 {stats.recentMatters.map((matter) => (
                   <li key={matter.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                    <div>
-                      <Link 
-                        to={`/matters/${matter.id}`}
-                        className="font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        {matter.matterName}
-                      </Link>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Link 
+                          to={`/matters/${matter.id}`}
+                          className="font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {matter.matterName}
+                        </Link>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMatterStatusColor(matter.status)}`}>
+                          {formatMatterStatus(matter.status)}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-500">#{matter.matterNumber}</p>
                     </div>
                     <Link 
@@ -349,14 +450,21 @@ const Home = () => {
                       </div>
                     </div>
                     <div className="text-sm text-gray-500">
-                      Owner: {task.owner.firstName} {task.owner.lastName}
+                      {task.dueDate ? (
+                        <span className={isOverdue(task.dueDate) && task.status !== 'COMPLETED' ? 'text-red-600 font-medium' : ''}>
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                          {isOverdue(task.dueDate) && task.status !== 'COMPLETED' && ' (Overdue)'}
+                        </span>
+                      ) : (
+                        <span>No due date</span>
+                      )}
                       {task.matter && (
                         <span className="ml-2">
                           | <Link 
                             to={`/matters/${task.matter.id}`}
                             className="text-blue-600 hover:text-blue-800"
                           >
-                            {task.matter.matterNumber}
+                            {task.matter.client.clientName} - {task.matter.matterName}
                           </Link>
                         </span>
                       )}

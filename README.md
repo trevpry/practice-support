@@ -6,6 +6,8 @@ A comprehensive web application for law firm ediscovery and litigation support t
 
 - **Client Management**: Track law firm clients with 7-digit client numbers
 - **Matter Management**: Organize matters with 6-digit matter numbers, linked to clients
+  - **Matter Status Tracking**: Track matter progress through workflow stages: Collection, Culling, Review, Production, Inactive
+  - **Status Visualization**: Color-coded status badges for quick identification
 - **People Management**: Manage attorneys, paralegals, vendors, and project managers
 - **Task Management**: Create and assign tasks with priorities, due dates, and status tracking
 - **User Management**: Create user accounts linked to people for personalized dashboards
@@ -160,11 +162,23 @@ This will start both the backend server (port 5001) and frontend development ser
 When a person is assigned to a matter, they are automatically linked to the client:
 - Attorneys assigned to matters become client attorneys (if none assigned)
 - Paralegals assigned to matters become client paralegals (if none assigned)
+- Project managers assigned to matters become client project managers (if none assigned)
 
 ### Team Management
 - **Matter Detail**: "Manage Team" button opens modal to assign/remove people
 - **Person Detail**: "Manage Matters" button opens modal to assign/remove matters
 - Real-time updates with proper relationship management
+
+### Matter Status Management
+- **Workflow Stages**: Track matters through five defined stages:
+  - **Collection**: Initial data gathering phase
+  - **Culling**: Data reduction and filtering phase
+  - **Review**: Document review and analysis phase
+  - **Production**: Final production and delivery phase
+  - **Inactive**: Matters that are paused or completed
+- **Visual Status Indicators**: Color-coded badges for quick status identification
+- **Dashboard Analytics**: Matter status breakdown showing distribution across all workflow stages
+- **Status Filtering**: Easy identification of matters in each workflow stage
 
 ### Task Management
 - **Task Creation**: Create tasks with title, description, priority, due date, and status
@@ -173,6 +187,11 @@ When a person is assigned to a matter, they are automatically linked to the clie
 - **Priority Levels**: URGENT, HIGH, MEDIUM, LOW with color-coded indicators
 - **Status Tracking**: TODO, IN_PROGRESS, COMPLETED, ON_HOLD
 - **Due Date Tracking**: Visual indicators for overdue tasks
+- **Task Organization**: Tasks page organized into four sections:
+  - **Tasks Past Due**: Overdue tasks highlighted with red background and urgent styling
+  - **Tasks Due Today**: Tasks due today with red border and high priority styling
+  - **Tasks Due Tomorrow**: Tasks due tomorrow with orange border and medium priority styling
+  - **Tasks Due Later**: Future tasks with gray border and standard styling
 - **Task Detail Pages**: Comprehensive view with team information and timeline
 - **User-Specific Views**: Tasks page and matter task sections show only current user's tasks
 - **Auto-Assignment**: New tasks automatically assigned to current user
@@ -182,7 +201,7 @@ When a person is assigned to a matter, they are automatically linked to the clie
 - **Person Linking**: Optional linking of users to existing Person records
 - **Personalized Dashboards**: When a user is linked to a person, see only relevant tasks, clients, and matters
 - **Current User System**: First user in database acts as current user (placeholder for authentication)
-- **Smart Filtering**: Dashboard shows clients where user is attorney/paralegal, matters where user is assigned, and user's tasks
+- **Smart Filtering**: Dashboard shows clients where user is attorney/paralegal/project manager, matters where user is assigned, and user's tasks
 - **User-Specific Views**: All sections show "My [Items]" vs "Total [Items]" based on user context
 - **Auto-Generated Usernames**: Usernames are automatically created from email (before @) or first/last name
 

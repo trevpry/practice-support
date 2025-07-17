@@ -184,7 +184,14 @@ const TaskDetail = () => {
 
   const isOverdue = (dueDate) => {
     if (!dueDate) return false;
-    return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
+    const today = new Date();
+    const taskDate = new Date(dueDate);
+    
+    // Set both dates to midnight for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    taskDate.setHours(0, 0, 0, 0);
+    
+    return taskDate < today;
   };
 
   if (loading) {

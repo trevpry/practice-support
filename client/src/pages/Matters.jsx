@@ -15,8 +15,26 @@ const Matters = () => {
   const [formData, setFormData] = useState({
     matterName: '',
     matterNumber: '',
-    clientId: ''
+    clientId: '',
+    status: 'COLLECTION'
   });
+
+  // Format status for display
+  const formatStatus = (status) => {
+    return status ? status.charAt(0) + status.slice(1).toLowerCase() : 'Collection';
+  };
+
+  // Get status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'COLLECTION': return 'bg-blue-100 text-blue-800';
+      case 'CULLING': return 'bg-yellow-100 text-yellow-800';
+      case 'REVIEW': return 'bg-orange-100 text-orange-800';
+      case 'PRODUCTION': return 'bg-green-100 text-green-800';
+      case 'INACTIVE': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
 
   // Fetch matters and clients
   const fetchData = async () => {
@@ -118,7 +136,8 @@ const Matters = () => {
     setFormData({
       matterName: matter.matterName,
       matterNumber: matter.matterNumber,
-      clientId: matter.clientId.toString()
+      clientId: matter.clientId.toString(),
+      status: matter.status || 'COLLECTION'
     });
     setIsModalOpen(true);
   };
@@ -126,7 +145,7 @@ const Matters = () => {
   // Open modal for creating
   const handleCreate = () => {
     setEditingMatter(null);
-    setFormData({ matterName: '', matterNumber: '', clientId: '' });
+    setFormData({ matterName: '', matterNumber: '', clientId: '', status: 'COLLECTION' });
     setIsModalOpen(true);
   };
 
@@ -179,6 +198,9 @@ const Matters = () => {
                           >
                             {matter.client.clientName}
                           </Link>
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(matter.status)}`}>
+                          {formatStatus(matter.status)}
                         </span>
                         <span>Client #: {matter.client.clientNumber}</span>
                         {matter.client.attorney && (
@@ -286,6 +308,23 @@ const Matters = () => {
                         {client.clientName} (#{client.clientNumber})
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="COLLECTION">Collection</option>
+                    <option value="CULLING">Culling</option>
+                    <option value="REVIEW">Review</option>
+                    <option value="PRODUCTION">Production</option>
+                    <option value="INACTIVE">Inactive</option>
                   </select>
                 </div>
                 <div className="flex justify-end space-x-3">

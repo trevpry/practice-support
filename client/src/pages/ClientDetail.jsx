@@ -149,6 +149,22 @@ const ClientDetail = () => {
                   <p className="text-gray-500">No paralegal assigned</p>
                 )}
               </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 mb-2">Project Manager</dt>
+                {client.projectManager ? (
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-purple-600" />
+                    <Link 
+                      to={`/people/${client.projectManager.id}`}
+                      className="text-purple-600 hover:text-purple-800"
+                    >
+                      {client.projectManager.firstName} {client.projectManager.lastName}
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No project manager assigned</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

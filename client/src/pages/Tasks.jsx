@@ -196,14 +196,67 @@ const Tasks = () => {
     }
   };
 
+  const isToday = (dateString) => {
+    if (!dateString) return false;
+    const today = new Date();
+    const taskDate = new Date(dateString);
+    
+    // Set both dates to midnight for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    taskDate.setHours(0, 0, 0, 0);
+    
+    return today.getTime() === taskDate.getTime();
+  };
+
+  const isTomorrow = (dateString) => {
+    if (!dateString) return false;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const taskDate = new Date(dateString);
+    taskDate.setHours(0, 0, 0, 0);
+    
+    return tomorrow.getTime() === taskDate.getTime();
+  };
+
+  const categorizeTasksByDate = (tasks) => {
+    const overdue = [];
+    const today = [];
+    const tomorrow = [];
+    const later = [];
+
+    tasks.forEach(task => {
+      if (isOverdue(task.dueDate)) {
+        overdue.push(task);
+      } else if (isToday(task.dueDate)) {
+        today.push(task);
+      } else if (isTomorrow(task.dueDate)) {
+        tomorrow.push(task);
+      } else {
+        later.push(task);
+      }
+    });
+
+    return { overdue, today, tomorrow, later };
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'No due date';
-    return new Date(dateString).toLocaleDateString();
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   const isOverdue = (dueDate) => {
     if (!dueDate) return false;
-    return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
+    const today = new Date();
+    const taskDate = new Date(dueDate);
+    
+    // Set both dates to midnight for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    taskDate.setHours(0, 0, 0, 0);
+    
+    return taskDate < today;
   };
 
   if (loading) {
@@ -240,95 +293,404 @@ const Tasks = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {tasks.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            {currentUser && currentUser.person 
-              ? "No tasks assigned to you yet. Create your first task to get started."
-              : "No tasks found. Create your first task to get started."
-            }
-          </div>
-        ) : (
-          tasks.map((task) => (
-            <div key={task.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Link 
-                      to={`/tasks/${task.id}`}
-                      className="text-xl font-semibold text-blue-600 hover:text-blue-800"
-                    >
-                      {task.title}
-                    </Link>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                      {task.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  
-                  {task.description && (
-                    <p className="text-gray-600 mb-3">{task.description}</p>
-                  )}
-
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      <span>Owner: {task.owner.firstName} {task.owner.lastName}</span>
-                    </div>
-                    
-                    {task.assignees.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>Assigned: {task.assignees.map(a => `${a.firstName} ${a.lastName}`).join(', ')}</span>
-                      </div>
-                    )}
-                    
-                    {task.matter && (
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" />
-                        <Link 
-                          to={`/matters/${task.matter.id}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {task.matter.matterNumber} - {task.matter.matterName}
-                        </Link>
-                      </div>
-                    )}
-                    
-                    <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-600' : ''}`}>
-                      {isOverdue(task.dueDate) ? (
-                        <AlertCircle className="h-4 w-4" />
-                      ) : (
-                        <Calendar className="h-4 w-4" />
-                      )}
-                      <span>{formatDate(task.dueDate)}</span>
-                      {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 ml-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(task)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(task.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
+      <div className="space-y-8">
+        {(() => {
+          const { overdue, today, tomorrow, later } = categorizeTasksByDate(tasks);
+          
+          if (tasks.length === 0) {
+            return (
+              <div className="text-center py-8 text-gray-500">
+                {currentUser && currentUser.person 
+                  ? "No tasks assigned to you yet. Create your first task to get started."
+                  : "No tasks found. Create your first task to get started."
+                }
               </div>
-            </div>
-          ))
-        )}
+            );
+          }
+
+          return (
+            <>
+              {/* Tasks Past Due */}
+              <div>
+                <h2 className="text-xl font-semibold text-red-800 mb-4 flex items-center">
+                  <span className="w-3 h-3 bg-red-700 rounded-full mr-2"></span>
+                  Tasks Past Due ({overdue.length})
+                </h2>
+                {overdue.length === 0 ? (
+                  <div className="text-gray-500 text-center py-4 border border-gray-200 rounded-lg">
+                    No overdue tasks
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {overdue.map(task => (
+                      <div key={task.id} className="bg-red-50 rounded-lg shadow-md p-6 border-l-4 border-l-red-700 border border-red-100">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Link 
+                                to={`/tasks/${task.id}`}
+                                className="text-xl font-semibold text-blue-600 hover:text-blue-800"
+                              >
+                                {task.title}
+                              </Link>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
+                                OVERDUE
+                              </span>
+                            </div>
+                            
+                            {task.description && (
+                              <p className="text-gray-600 mb-3">{task.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Owner: {task.owner.firstName} {task.owner.lastName}</span>
+                              </div>
+                              
+                              {task.assignees.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  <span>Assigned: {task.assignees.map(a => `${a.firstName} ${a.lastName}`).join(', ')}</span>
+                                </div>
+                              )}
+                              
+                              {task.matter && (
+                                <div className="flex items-center gap-1">
+                                  <FileText className="h-4 w-4" />
+                                  <Link 
+                                    to={`/matters/${task.matter.id}`}
+                                    className="text-blue-600 hover:text-blue-800"
+                                  >
+                                    {task.matter.matterNumber} - {task.matter.matterName}
+                                  </Link>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center gap-1 text-red-600">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>{formatDate(task.dueDate)}</span>
+                                <span className="font-medium">(Overdue)</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(task)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(task.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tasks Due Today */}
+              <div>
+                <h2 className="text-xl font-semibold text-red-700 mb-4 flex items-center">
+                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                  Tasks Due Today ({today.length})
+                </h2>
+                {today.length === 0 ? (
+                  <div className="text-gray-500 text-center py-4 border border-gray-200 rounded-lg">
+                    No tasks due today
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {today.map(task => (
+                      <div key={task.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Link 
+                                to={`/tasks/${task.id}`}
+                                className="text-xl font-semibold text-blue-600 hover:text-blue-800"
+                              >
+                                {task.title}
+                              </Link>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                            </div>
+                            
+                            {task.description && (
+                              <p className="text-gray-600 mb-3">{task.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Owner: {task.owner.firstName} {task.owner.lastName}</span>
+                              </div>
+                              
+                              {task.assignees.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  <span>Assigned: {task.assignees.map(a => `${a.firstName} ${a.lastName}`).join(', ')}</span>
+                                </div>
+                              )}
+                              
+                              {task.matter && (
+                                <div className="flex items-center gap-1">
+                                  <FileText className="h-4 w-4" />
+                                  <Link 
+                                    to={`/matters/${task.matter.id}`}
+                                    className="text-blue-600 hover:text-blue-800"
+                                  >
+                                    {task.matter.matterNumber} - {task.matter.matterName}
+                                  </Link>
+                                </div>
+                              )}
+                              
+                              <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-600' : ''}`}>
+                                {isOverdue(task.dueDate) ? (
+                                  <AlertCircle className="h-4 w-4" />
+                                ) : (
+                                  <Calendar className="h-4 w-4" />
+                                )}
+                                <span>{formatDate(task.dueDate)}</span>
+                                {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(task)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(task.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tasks Due Tomorrow */}
+              <div>
+                <h2 className="text-xl font-semibold text-orange-700 mb-4 flex items-center">
+                  <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                  Tasks Due Tomorrow ({tomorrow.length})
+                </h2>
+                {tomorrow.length === 0 ? (
+                  <div className="text-gray-500 text-center py-4 border border-gray-200 rounded-lg">
+                    No tasks due tomorrow
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {tomorrow.map(task => (
+                      <div key={task.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Link 
+                                to={`/tasks/${task.id}`}
+                                className="text-xl font-semibold text-blue-600 hover:text-blue-800"
+                              >
+                                {task.title}
+                              </Link>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                            </div>
+                            
+                            {task.description && (
+                              <p className="text-gray-600 mb-3">{task.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Owner: {task.owner.firstName} {task.owner.lastName}</span>
+                              </div>
+                              
+                              {task.assignees.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  <span>Assigned: {task.assignees.map(a => `${a.firstName} ${a.lastName}`).join(', ')}</span>
+                                </div>
+                              )}
+                              
+                              {task.matter && (
+                                <div className="flex items-center gap-1">
+                                  <FileText className="h-4 w-4" />
+                                  <Link 
+                                    to={`/matters/${task.matter.id}`}
+                                    className="text-blue-600 hover:text-blue-800"
+                                  >
+                                    {task.matter.matterNumber} - {task.matter.matterName}
+                                  </Link>
+                                </div>
+                              )}
+                              
+                              <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-600' : ''}`}>
+                                {isOverdue(task.dueDate) ? (
+                                  <AlertCircle className="h-4 w-4" />
+                                ) : (
+                                  <Calendar className="h-4 w-4" />
+                                )}
+                                <span>{formatDate(task.dueDate)}</span>
+                                {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(task)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(task.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tasks Due Later */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                  <span className="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
+                  Tasks Due Later ({later.length})
+                </h2>
+                {later.length === 0 ? (
+                  <div className="text-gray-500 text-center py-4 border border-gray-200 rounded-lg">
+                    No future tasks
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {later.map(task => (
+                      <div key={task.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-gray-400">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Link 
+                                to={`/tasks/${task.id}`}
+                                className="text-xl font-semibold text-blue-600 hover:text-blue-800"
+                              >
+                                {task.title}
+                              </Link>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                            </div>
+                            
+                            {task.description && (
+                              <p className="text-gray-600 mb-3">{task.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Owner: {task.owner.firstName} {task.owner.lastName}</span>
+                              </div>
+                              
+                              {task.assignees.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  <span>Assigned: {task.assignees.map(a => `${a.firstName} ${a.lastName}`).join(', ')}</span>
+                                </div>
+                              )}
+                              
+                              {task.matter && (
+                                <div className="flex items-center gap-1">
+                                  <FileText className="h-4 w-4" />
+                                  <Link 
+                                    to={`/matters/${task.matter.id}`}
+                                    className="text-blue-600 hover:text-blue-800"
+                                  >
+                                    {task.matter.matterNumber} - {task.matter.matterName}
+                                  </Link>
+                                </div>
+                              )}
+                              
+                              <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-600' : ''}`}>
+                                {isOverdue(task.dueDate) ? (
+                                  <AlertCircle className="h-4 w-4" />
+                                ) : (
+                                  <Calendar className="h-4 w-4" />
+                                )}
+                                <span>{formatDate(task.dueDate)}</span>
+                                {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(task)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(task.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Task Modal */}

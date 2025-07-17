@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PersonType {
+  ATTORNEY
+  PARALEGAL
+  VENDOR
+  PROJECT_MANAGER
+}
+
+model Person {
+  id        Int        @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+  type      PersonType
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  // Relationships with clients
+  clientsAsAttorney  Client[] @relation("ClientAttorney")
+  clientsAsParalegal Client[] @relation("ClientParalegal")
+  
+  // Relationships with matters
+  matters            MatterPerson[]
+}
+
+model Client {
+  id           Int      @id @default(autoincrement())
+  clientName   String
+  clientNumber String   @unique // 7-digit client number
+  attorneyId   Int?     // Optional attorney assigned to client
+  paralegalId  Int?     // Optional paralegal assigned to client
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  matters      Matter[]
+  
+  // Relationships with people
+  attorney     Person?  @relation("ClientAttorney", fields: [attorneyId], references: [id])
+  paralegal    Person?  @relation("ClientParalegal", fields: [paralegalId], references: [id])
+}
+
+model Matter {
+  id           Int      @id @default(autoincrement())
+  matterName   String
+  matterNumber String   @unique // 6-digit matter number
+  clientId     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  people       MatterPerson[]
+}
+
+model MatterPerson {
+  id       Int    @id @default(autoincrement())
+  matterId Int
+  personId Int
+  role     String? // Optional role description (e.g., "Lead Attorney", "Document Review")
+  
+  matter   Matter @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  @@unique([matterId, personId])
+}

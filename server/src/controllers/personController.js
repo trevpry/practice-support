@@ -6,9 +6,9 @@ const getPeople = async (req, res) => {
   try {
     const people = await prisma.person.findMany({
       include: {
-        clientsAsAttorney: true,
-        clientsAsParalegal: true,
-        matters: {
+        clientAttorney: true,
+        clientParalegal: true,
+        matterPersons: {
           include: {
             matter: {
               include: {
@@ -25,6 +25,7 @@ const getPeople = async (req, res) => {
     });
     res.json(people);
   } catch (error) {
+    console.error('Error fetching people:', error);
     res.status(500).json({ error: 'Failed to fetch people' });
   }
 };
@@ -36,17 +37,17 @@ const getPerson = async (req, res) => {
     const person = await prisma.person.findUnique({
       where: { id: parseInt(id) },
       include: {
-        clientsAsAttorney: {
+        clientAttorney: {
           include: {
             matters: true
           }
         },
-        clientsAsParalegal: {
+        clientParalegal: {
           include: {
             matters: true
           }
         },
-        matters: {
+        matterPersons: {
           include: {
             matter: {
               include: {
@@ -64,6 +65,7 @@ const getPerson = async (req, res) => {
     
     res.json(person);
   } catch (error) {
+    console.error('Error fetching person:', error);
     res.status(500).json({ error: 'Failed to fetch person' });
   }
 };
@@ -71,16 +73,16 @@ const getPerson = async (req, res) => {
 // Create a new person
 const createPerson = async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, type, matterIds } = req.body;
+    const { firstName, lastName, email, phone, type, company, role, notes, streetAddress, city, state, zipCode, country, matterIds } = req.body;
     
     // Validate input
-    if (!firstName || !lastName || !type) {
-      return res.status(400).json({ error: 'First name, last name, and type are required' });
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: 'First name and last name are required' });
     }
     
-    // Validate type
+    // Validate type if provided
     const validTypes = ['ATTORNEY', 'PARALEGAL', 'VENDOR', 'PROJECT_MANAGER'];
-    if (!validTypes.includes(type)) {
+    if (type && !validTypes.includes(type)) {
       return res.status(400).json({ error: 'Invalid person type' });
     }
     
@@ -96,7 +98,15 @@ const createPerson = async (req, res) => {
         lastName,
         email: email || null,
         phone: phone || null,
-        type
+        type: type || null,
+        company: company || null,
+        role: role || null,
+        notes: notes || null,
+        streetAddress: streetAddress || null,
+        city: city || null,
+        state: state || null,
+        zipCode: zipCode || null,
+        country: country || null
       }
     });
     
@@ -114,9 +124,9 @@ const createPerson = async (req, res) => {
     const completePerson = await prisma.person.findUnique({
       where: { id: person.id },
       include: {
-        clientsAsAttorney: true,
-        clientsAsParalegal: true,
-        matters: {
+        clientAttorney: true,
+        clientParalegal: true,
+        matterPersons: {
           include: {
             matter: {
               include: {
@@ -130,6 +140,7 @@ const createPerson = async (req, res) => {
     
     res.status(201).json(completePerson);
   } catch (error) {
+    console.error('Error creating person:', error);
     res.status(500).json({ error: 'Failed to create person' });
   }
 };
@@ -138,16 +149,16 @@ const createPerson = async (req, res) => {
 const updatePerson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, email, phone, type, matterIds } = req.body;
+    const { firstName, lastName, email, phone, type, company, role, notes, streetAddress, city, state, zipCode, country, matterIds } = req.body;
     
     // Validate input
-    if (!firstName || !lastName || !type) {
-      return res.status(400).json({ error: 'First name, last name, and type are required' });
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: 'First name and last name are required' });
     }
     
-    // Validate type
+    // Validate type if provided
     const validTypes = ['ATTORNEY', 'PARALEGAL', 'VENDOR', 'PROJECT_MANAGER'];
-    if (!validTypes.includes(type)) {
+    if (type && !validTypes.includes(type)) {
       return res.status(400).json({ error: 'Invalid person type' });
     }
     
@@ -164,7 +175,15 @@ const updatePerson = async (req, res) => {
         lastName,
         email: email || null,
         phone: phone || null,
-        type
+        type: type || null,
+        company: company || null,
+        role: role || null,
+        notes: notes || null,
+        streetAddress: streetAddress || null,
+        city: city || null,
+        state: state || null,
+        zipCode: zipCode || null,
+        country: country || null
       }
     });
     
@@ -225,9 +244,9 @@ const updatePerson = async (req, res) => {
     const person = await prisma.person.findUnique({
       where: { id: parseInt(id) },
       include: {
-        clientsAsAttorney: true,
-        clientsAsParalegal: true,
-        matters: {
+        clientAttorney: true,
+        clientParalegal: true,
+        matterPersons: {
           include: {
             matter: {
               include: {
@@ -241,6 +260,7 @@ const updatePerson = async (req, res) => {
     
     res.json(person);
   } catch (error) {
+    console.error('Error updating person:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Person not found' });
     }
@@ -259,6 +279,7 @@ const deletePerson = async (req, res) => {
     
     res.json({ message: 'Person deleted successfully' });
   } catch (error) {
+    console.error('Error deleting person:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Person not found' });
     }

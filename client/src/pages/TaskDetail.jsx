@@ -315,7 +315,7 @@ const TaskDetail = () => {
                     >
                       {task.owner.firstName} {task.owner.lastName}
                     </Link>
-                    <p className="text-sm text-gray-500">{task.owner.type.replace('_', ' ')}</p>
+                    <p className="text-sm text-gray-500">{task.owner.type ? task.owner.type.replace('_', ' ') : 'No type specified'}</p>
                     {task.owner.email && (
                       <p className="text-sm text-gray-500">{task.owner.email}</p>
                     )}
@@ -340,7 +340,7 @@ const TaskDetail = () => {
                           >
                             {assignee.firstName} {assignee.lastName}
                           </Link>
-                          <p className="text-sm text-gray-500">{assignee.type.replace('_', ' ')}</p>
+                          <p className="text-sm text-gray-500">{assignee.type ? assignee.type.replace('_', ' ') : 'No type specified'}</p>
                           {assignee.email && (
                             <p className="text-sm text-gray-500">{assignee.email}</p>
                           )}

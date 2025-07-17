@@ -471,6 +471,73 @@ const getTasksByPerson = async (req, res) => {
   }
 };
 
+// Get tasks for current user's linked person
+const getTasksForCurrentUser = async (req, res) => {
+  try {
+    // Get current user (for now, just get the first user as a placeholder)
+    // In a real app, this would be based on authentication
+    const currentUser = await prisma.user.findFirst({
+      include: {
+        person: true
+      }
+    });
+
+    if (!currentUser || !currentUser.person) {
+      return res.json([]);
+    }
+
+    // Get tasks where the user's linked person is either owner or assignee
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { ownerId: currentUser.person.id },
+          { assignees: { some: { id: currentUser.person.id } } }
+        ]
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        assignees: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        matter: {
+          select: {
+            id: true,
+            matterName: true,
+            matterNumber: true,
+            client: {
+              select: {
+                id: true,
+                clientName: true,
+                clientNumber: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        { priority: 'desc' },
+        { dueDate: 'asc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error fetching tasks for current user:', error);
+    res.status(500).json({ error: 'Failed to fetch tasks' });
+  }
+};
+
 module.exports = {
   getAllTasks,
   getTaskById,
@@ -479,4 +546,5 @@ module.exports = {
   deleteTask,
   getTasksByMatter,
   getTasksByPerson,
+  getTasksForCurrentUser,
 };

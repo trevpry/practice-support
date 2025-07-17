@@ -32,25 +32,30 @@ enum TaskPriority {
 }
 
 model Person {
-  id        Int        @id @default(autoincrement())
-  firstName String
-  lastName  String
-  email     String?
-  phone     String?
-  type      PersonType
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  
-  // Relationships with clients
-  clientsAsAttorney  Client[] @relation("ClientAttorney")
-  clientsAsParalegal Client[] @relation("ClientParalegal")
-  
-  // Relationships with matters
-  matters            MatterPerson[]
-  
-  // Relationships with tasks
-  ownedTasks         Task[]   @relation("TaskOwner")
-  assignedTasks      Task[]   @relation("TaskAssignees")
+  id             Int          @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  company        String?
+  role           String?
+  type           PersonType?  // Add back the type field
+  notes          String?
+  streetAddress  String?
+  city           String?
+  state          String?
+  zipCode        String?
+  country        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relationships
+  ownedTasks     Task[]         @relation("TaskOwner")
+  assignedTasks  Task[]         @relation("TaskAssignees")
+  clientAttorney Client[]       @relation("ClientAttorney")
+  clientParalegal Client[]      @relation("ClientParalegal")
+  matterPersons  MatterPerson[]
+  user           User?          // Optional relationship with User
 }
 
 model Client {
@@ -109,4 +114,18 @@ model Task {
   matter      Matter?      @relation(fields: [matterId], references: [id], onDelete: Cascade)
   owner       Person       @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   assignees   Person[]     @relation("TaskAssignees")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  firstName String
+  lastName  String
+  personId  Int?     @unique // Optional link to a Person
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationship with person
+  person    Person?  @relation(fields: [personId], references: [id], onDelete: SetNull)
 }

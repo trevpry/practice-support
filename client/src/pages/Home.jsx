@@ -8,34 +8,65 @@ const Home = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
     totalMatters: 0,
-    totalPeople: 0,
     totalTasks: 0,
     activeTasks: 0,
     overdueTasks: 0,
     recentClients: [],
     recentMatters: [],
-    recentPeople: [],
     recentTasks: []
   });
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [clientsResponse, mattersResponse, peopleResponse, tasksResponse] = await Promise.all([
-          fetch('http://localhost:5001/api/clients'),
-          fetch('http://localhost:5001/api/matters'),
-          fetch('http://localhost:5001/api/people'),
-          fetch('http://localhost:5001/api/tasks')
+        const [clientsResponse, mattersResponse, tasksResponse, userResponse] = await Promise.all([
+          fetch('/api/clients'),
+          fetch('/api/matters'),
+          fetch('/api/auth/current-user/tasks'),
+          fetch('/api/auth/current-user')
         ]);
 
-        if (clientsResponse.ok && mattersResponse.ok && peopleResponse.ok && tasksResponse.ok) {
-          const [clients, matters, people, tasks] = await Promise.all([
+        if (clientsResponse.ok && mattersResponse.ok && tasksResponse.ok && userResponse.ok) {
+          const [allClients, allMatters, tasks, user] = await Promise.all([
             clientsResponse.json(),
             mattersResponse.json(),
-            peopleResponse.json(),
-            tasksResponse.json()
+            tasksResponse.json(),
+            userResponse.json()
           ]);
+
+          setCurrentUser(user);
+
+          // Filter clients and matters based on current user's linked person
+          let filteredClients = allClients;
+          let filteredMatters = allMatters;
+
+          if (user && user.person) {
+            const personId = user.person.id;
+            console.log('Filtering for person ID:', personId);
+            
+            // Filter clients where the user's person is assigned as attorney or paralegal
+            filteredClients = allClients.filter(client => 
+              client.attorneyId === personId || client.paralegalId === personId
+            );
+            console.log('Filtered clients:', filteredClients.length, 'of', allClients.length);
+
+            // Filter matters where the user's person is assigned to the matter OR to the client
+            filteredMatters = allMatters.filter(matter => {
+              // Check if person is directly assigned to the matter
+              const isAssignedToMatter = matter.people && matter.people.some(mp => mp.person.id === personId);
+              
+              // Check if person is assigned to the client (attorney or paralegal)
+              const isAssignedToClient = matter.client && 
+                (matter.client.attorneyId === personId || matter.client.paralegalId === personId);
+              
+              return isAssignedToMatter || isAssignedToClient;
+            });
+            console.log('Filtered matters:', filteredMatters.length, 'of', allMatters.length);
+          } else {
+            console.log('No user person found, showing all data');
+          }
 
           const activeTasks = tasks.filter(task => task.status !== 'COMPLETED').length;
           const today = new Date();
@@ -46,15 +77,13 @@ const Home = () => {
           ).length;
 
           setStats({
-            totalClients: clients.length,
-            totalMatters: matters.length,
-            totalPeople: people.length,
+            totalClients: filteredClients.length,
+            totalMatters: filteredMatters.length,
             totalTasks: tasks.length,
             activeTasks,
             overdueTasks,
-            recentClients: clients.slice(-5).reverse(),
-            recentMatters: matters.slice(-5).reverse(),
-            recentPeople: people.slice(-5).reverse(),
+            recentClients: filteredClients.slice(-5).reverse(),
+            recentMatters: filteredMatters.slice(-5).reverse(),
             recentTasks: tasks.slice(-5).reverse()
           });
         }
@@ -83,20 +112,35 @@ const Home = () => {
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Welcome to Practice Support
+            {currentUser && (
+              <span className="block text-lg font-normal text-gray-600 mt-2">
+                {currentUser.firstName} {currentUser.lastName}
+                {currentUser.person && (
+                  <span className="text-sm text-blue-600 block">
+                    Linked to: {currentUser.person.firstName} {currentUser.person.lastName}
+                  </span>
+                )}
+              </span>
+            )}
           </h1>
           <p className="text-xl text-gray-600">
-            Manage your law firm's clients and matters efficiently
+            {currentUser && currentUser.person 
+              ? "Your personalized dashboard showing tasks and matters relevant to you"
+              : "Manage your law firm's clients and matters efficiently"
+            }
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-2xl font-bold text-gray-900">{stats.totalClients}</p>
-                <p className="text-gray-600">Total Clients</p>
+                <p className="text-gray-600">
+                  {currentUser && currentUser.person ? "My Clients" : "Total Clients"}
+                </p>
               </div>
             </div>
           </div>
@@ -106,17 +150,9 @@ const Home = () => {
               <FileText className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-2xl font-bold text-gray-900">{stats.totalMatters}</p>
-                <p className="text-gray-600">Total Matters</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center">
-              <User className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPeople}</p>
-                <p className="text-gray-600">Total People</p>
+                <p className="text-gray-600">
+                  {currentUser && currentUser.person ? "My Matters" : "Total Matters"}
+                </p>
               </div>
             </div>
           </div>
@@ -126,7 +162,9 @@ const Home = () => {
               <CheckSquare className="h-8 w-8 text-indigo-600" />
               <div className="ml-4">
                 <p className="text-2xl font-bold text-gray-900">{stats.totalTasks}</p>
-                <p className="text-gray-600">Total Tasks</p>
+                <p className="text-gray-600">
+                  {currentUser && currentUser.person ? "My Tasks" : "Total Tasks"}
+                </p>
               </div>
             </div>
           </div>
@@ -139,7 +177,9 @@ const Home = () => {
               <CheckSquare className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-2xl font-bold text-gray-900">{stats.activeTasks}</p>
-                <p className="text-gray-600">Active Tasks</p>
+                <p className="text-gray-600">
+                  {currentUser && currentUser.person ? "My Active Tasks" : "Active Tasks"}
+                </p>
               </div>
             </div>
           </div>
@@ -151,7 +191,9 @@ const Home = () => {
                 <p className={`text-2xl font-bold ${stats.overdueTasks > 0 ? 'text-red-600' : 'text-gray-900'}`}>
                   {stats.overdueTasks}
                 </p>
-                <p className="text-gray-600">Overdue Tasks</p>
+                <p className="text-gray-600">
+                  {currentUser && currentUser.person ? "My Overdue Tasks" : "Overdue Tasks"}
+                </p>
               </div>
             </div>
           </div>
@@ -201,12 +243,16 @@ const Home = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Clients */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Clients</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {currentUser && currentUser.person ? "My Recent Clients" : "Recent Clients"}
+            </h2>
             {stats.recentClients.length === 0 ? (
-              <p className="text-gray-500">No clients yet</p>
+              <p className="text-gray-500">
+                {currentUser && currentUser.person ? "No clients assigned to you yet" : "No clients yet"}
+              </p>
             ) : (
               <ul className="space-y-3">
                 {stats.recentClients.map((client) => (
@@ -231,9 +277,13 @@ const Home = () => {
 
           {/* Recent Matters */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Matters</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {currentUser && currentUser.person ? "My Recent Matters" : "Recent Matters"}
+            </h2>
             {stats.recentMatters.length === 0 ? (
-              <p className="text-gray-500">No matters yet</p>
+              <p className="text-gray-500">
+                {currentUser && currentUser.person ? "No matters assigned to you yet" : "No matters yet"}
+              </p>
             ) : (
               <ul className="space-y-3">
                 {stats.recentMatters.map((matter) => (
@@ -259,38 +309,15 @@ const Home = () => {
             )}
           </div>
 
-          {/* Recent People */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent People</h2>
-            {stats.recentPeople.length === 0 ? (
-              <p className="text-gray-500">No people yet</p>
-            ) : (
-              <ul className="space-y-3">
-                {stats.recentPeople.map((person) => (
-                  <li key={person.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                    <div>
-                      <Link 
-                        to={`/people/${person.id}`}
-                        className="font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        {person.firstName} {person.lastName}
-                      </Link>
-                      <p className="text-sm text-gray-500">{person.type.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</p>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {person.email || 'No email'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
           {/* Recent Tasks */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Tasks</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {currentUser && currentUser.person ? "My Recent Tasks" : "Recent Tasks"}
+            </h2>
             {stats.recentTasks.length === 0 ? (
-              <p className="text-gray-500">No tasks yet</p>
+              <p className="text-gray-500">
+                {currentUser && currentUser.person ? "No tasks assigned to you yet" : "No tasks yet"}
+              </p>
             ) : (
               <ul className="space-y-3">
                 {stats.recentTasks.map((task) => (
@@ -317,7 +344,7 @@ const Home = () => {
                           task.status === 'COMPLETED' ? 'text-green-600 bg-green-100' :
                           'text-yellow-600 bg-yellow-100'
                         }`}>
-                          {task.status.replace('_', ' ')}
+                          {task.status ? task.status.replace('_', ' ') : 'Unknown'}
                         </span>
                       </div>
                     </div>

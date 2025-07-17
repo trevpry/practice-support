@@ -32,8 +32,18 @@ const {
   updateTask,
   deleteTask,
   getTasksByMatter,
-  getTasksByPerson
+  getTasksByPerson,
+  getTasksForCurrentUser
 } = require('../controllers/taskController');
+
+const {
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  getCurrentUser
+} = require('../controllers/userController');
 
 // Client routes
 router.get('/clients', getClients);
@@ -65,6 +75,15 @@ router.put('/tasks/:id', updateTask);
 router.delete('/tasks/:id', deleteTask);
 router.get('/matters/:matterId/tasks', getTasksByMatter);
 router.get('/people/:personId/tasks', getTasksByPerson);
+router.get('/auth/current-user/tasks', getTasksForCurrentUser);
+
+// User routes
+router.get('/users', getUsers);
+router.get('/users/:id', getUserById);
+router.post('/users', createUser);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
+router.get('/auth/current-user', getCurrentUser);
 
 // Health check route
 router.get('/health', (req, res) => {

@@ -8,6 +8,7 @@ const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [people, setPeople] = useState([]);
   const [matters, setMatters] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -23,14 +24,26 @@ const Tasks = () => {
   });
 
   useEffect(() => {
+    fetchCurrentUser();
     fetchTasks();
     fetchPeople();
     fetchMatters();
   }, []);
 
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch('/api/auth/current-user');
+      const user = await response.json();
+      setCurrentUser(user);
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+    }
+  };
+
   const fetchTasks = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/tasks');
+      // Use current user's tasks endpoint instead of all tasks
+      const response = await fetch('/api/auth/current-user/tasks');
       const data = await response.json();
       setTasks(data);
     } catch (error) {
@@ -42,7 +55,7 @@ const Tasks = () => {
 
   const fetchPeople = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/people');
+      const response = await fetch('/api/people');
       const data = await response.json();
       setPeople(data);
     } catch (error) {
@@ -52,7 +65,7 @@ const Tasks = () => {
 
   const fetchMatters = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/matters');
+      const response = await fetch('/api/matters');
       const data = await response.json();
       setMatters(data);
     } catch (error) {
@@ -81,10 +94,15 @@ const Tasks = () => {
     e.preventDefault();
     try {
       const url = editingTask 
-        ? `http://localhost:5001/api/tasks/${editingTask.id}`
-        : 'http://localhost:5001/api/tasks';
+        ? `/api/tasks/${editingTask.id}`
+        : '/api/tasks';
       
       const method = editingTask ? 'PUT' : 'POST';
+      
+      // For new tasks, automatically set the current user's linked person as the owner
+      const ownerId = editingTask 
+        ? parseInt(formData.ownerId)
+        : (currentUser && currentUser.person ? currentUser.person.id : parseInt(formData.ownerId));
       
       const response = await fetch(url, {
         method,
@@ -94,7 +112,7 @@ const Tasks = () => {
         body: JSON.stringify({
           ...formData,
           matterId: formData.matterId || null,
-          ownerId: parseInt(formData.ownerId),
+          ownerId: ownerId,
           assigneeIds: formData.assigneeIds.map(id => parseInt(id))
         }),
       });
@@ -129,7 +147,7 @@ const Tasks = () => {
   const handleDelete = async (taskId) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/tasks/${taskId}`, {
+        const response = await fetch(`/api/tasks/${taskId}`, {
           method: 'DELETE',
         });
 
@@ -152,7 +170,7 @@ const Tasks = () => {
       priority: 'MEDIUM',
       dueDate: '',
       matterId: '',
-      ownerId: '',
+      ownerId: currentUser && currentUser.person ? currentUser.person.id.toString() : '',
       assigneeIds: []
     });
     setEditingTask(null);
@@ -202,7 +220,14 @@ const Tasks = () => {
     <Layout>
       <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Task Management</h1>
+        <div>
+          <h1 className="text-3xl font-bold">My Tasks</h1>
+          {currentUser && currentUser.person && (
+            <p className="text-gray-600 mt-1">
+              Tasks for {currentUser.person.firstName} {currentUser.person.lastName}
+            </p>
+          )}
+        </div>
         <Button 
           onClick={() => {
             resetForm();
@@ -218,7 +243,10 @@ const Tasks = () => {
       <div className="grid gap-4">
         {tasks.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No tasks found. Create your first task to get started.
+            {currentUser && currentUser.person 
+              ? "No tasks assigned to you yet. Create your first task to get started."
+              : "No tasks found. Create your first task to get started."
+            }
           </div>
         ) : (
           tasks.map((task) => (
@@ -308,7 +336,7 @@ const Tasks = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
-              {editingTask ? 'Edit Task' : 'Create New Task'}
+              {editingTask ? 'Edit Task' : 'Create My Task'}
             </h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -397,20 +425,26 @@ const Tasks = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Task Owner *</label>
-                <select
-                  name="ownerId"
-                  value={formData.ownerId}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select an owner</option>
-                  {people.map(person => (
-                    <option key={person.id} value={person.id}>
-                      {person.firstName} {person.lastName} ({person.type})
-                    </option>
-                  ))}
-                </select>
+                {!editingTask && currentUser && currentUser.person ? (
+                  <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50">
+                    {currentUser.person.firstName} {currentUser.person.lastName} ({currentUser.person.type || 'No type'}) - Auto-assigned
+                  </div>
+                ) : (
+                  <select
+                    name="ownerId"
+                    value={formData.ownerId}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    required
+                  >
+                    <option value="">Select an owner</option>
+                    {people.map(person => (
+                      <option key={person.id} value={person.id}>
+                        {person.firstName} {person.lastName} ({person.type || 'No type'})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
@@ -423,7 +457,7 @@ const Tasks = () => {
                         checked={formData.assigneeIds.includes(person.id.toString())}
                         onChange={() => handleAssigneeChange(person.id.toString())}
                       />
-                      <span>{person.firstName} {person.lastName} ({person.type})</span>
+                      <span>{person.firstName} {person.lastName} ({person.type || 'No type'})</span>
                     </label>
                   ))}
                 </div>
@@ -441,7 +475,7 @@ const Tasks = () => {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingTask ? 'Update Task' : 'Create Task'}
+                  {editingTask ? 'Update Task' : 'Create My Task'}
                 </Button>
               </div>
             </form>

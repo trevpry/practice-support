@@ -202,9 +202,11 @@ const PersonDetail = () => {
                 {person.firstName} {person.lastName}
               </h1>
               <div className="flex items-center space-x-2 mt-1">
-                <span className={`inline-block text-sm px-3 py-1 rounded-full ${getPersonTypeBadgeColor(person.type)}`}>
-                  {person.type.replace('_', ' ')}
-                </span>
+                {person.type && (
+                  <span className={`inline-block text-sm px-3 py-1 rounded-full ${getPersonTypeBadgeColor(person.type)}`}>
+                    {person.type.replace('_', ' ')}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -236,7 +238,7 @@ const PersonDetail = () => {
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Type</dt>
-                <dd className="text-lg text-gray-900">{person.type.replace('_', ' ')}</dd>
+                <dd className="text-lg text-gray-900">{person.type ? person.type.replace('_', ' ') : 'No type specified'}</dd>
               </div>
               {person.email && (
                 <div>

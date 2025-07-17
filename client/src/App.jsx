@@ -9,6 +9,7 @@ import People from './pages/People';
 import PersonDetail from './pages/PersonDetail';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
+import Users from './pages/Users';
 import ApiTest from './pages/ApiTest';
 import './styles/globals.css';
 
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/people/:id" element={<PersonDetail />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
+        <Route path="/users" element={<Users />} />
         <Route path="/api-test" element={<ApiTest />} />
       </Routes>
     </Router>

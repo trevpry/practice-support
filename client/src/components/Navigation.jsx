@@ -57,6 +57,14 @@ const Navigation = () => {
                 Tasks
               </Button>
             </Link>
+            <Link to="/users">
+              <Button 
+                variant={isActive('/users') ? 'secondary' : 'ghost'}
+                className="text-white hover:bg-blue-800"
+              >
+                Users
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

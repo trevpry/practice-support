@@ -9,6 +9,7 @@ const MatterDetail = () => {
   const navigate = useNavigate();
   const [matter, setMatter] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
@@ -17,9 +18,21 @@ const MatterDetail = () => {
   const [teamModalLoading, setTeamModalLoading] = useState(false);
 
   useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/current-user');
+        if (response.ok) {
+          const user = await response.json();
+          setCurrentUser(user);
+        }
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+      }
+    };
+
     const fetchMatter = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/matters/${id}`);
+        const response = await fetch(`/api/matters/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Matter not found');
@@ -37,16 +50,20 @@ const MatterDetail = () => {
 
     const fetchTasks = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/matters/${id}/tasks`);
-        if (response.ok) {
-          const data = await response.json();
-          setTasks(data);
+        // Get current user's tasks and filter by matter
+        const userTasksResponse = await fetch('/api/auth/current-user/tasks');
+        if (userTasksResponse.ok) {
+          const allUserTasks = await userTasksResponse.json();
+          // Filter tasks that belong to this matter
+          const matterTasks = allUserTasks.filter(task => task.matterId === parseInt(id));
+          setTasks(matterTasks);
         }
       } catch (err) {
         console.error('Error fetching tasks:', err);
       }
     };
 
+    fetchCurrentUser();
     fetchMatter();
     fetchTasks();
   }, [id]);
@@ -57,7 +74,7 @@ const MatterDetail = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/matters/${id}`, {
+      const response = await fetch(`/api/matters/${id}`, {
         method: 'DELETE',
       });
 
@@ -72,7 +89,7 @@ const MatterDetail = () => {
   // Fetch all people for team management
   const fetchAllPeople = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/people');
+      const response = await fetch('/api/people');
       if (!response.ok) throw new Error('Failed to fetch people');
       const people = await response.json();
       setAllPeople(people);
@@ -103,7 +120,7 @@ const MatterDetail = () => {
   const saveTeamChanges = async () => {
     setTeamModalLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/api/matters/${id}`, {
+      const response = await fetch(`/api/matters/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -325,15 +342,17 @@ const MatterDetail = () => {
                         {matterPerson.person.firstName} {matterPerson.person.lastName}
                       </Link>
                       <div className="mt-1 space-y-1">
-                        <span className={`inline-block text-xs px-2 py-1 rounded ${getPersonTypeBadgeColor(matterPerson.person.type)}`}>
-                          {matterPerson.person.type.replace('_', ' ')}
-                        </span>
+                        {matterPerson.person.type && (
+                          <span className={`inline-block text-xs px-2 py-1 rounded ${getPersonTypeBadgeColor(matterPerson.person.type)}`}>
+                            {matterPerson.person.type.replace('_', ' ')}
+                          </span>
+                        )}
                         {matterPerson.role && (
                           <div className="text-sm text-gray-600">Role: {matterPerson.role}</div>
                         )}
                       </div>
                     </div>
-                    <User className={`w-5 h-5 ${getPersonTypeColor(matterPerson.person.type)}`} />
+                    <User className={`w-5 h-5 ${matterPerson.person.type ? getPersonTypeColor(matterPerson.person.type) : 'text-gray-400'}`} />
                   </div>
                 </div>
               ))}
@@ -345,7 +364,7 @@ const MatterDetail = () => {
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">
-              Matter Tasks ({tasks.length})
+              {currentUser && currentUser.person ? "My Tasks" : "Matter Tasks"} ({tasks.length})
             </h2>
             <Link to="/tasks">
               <Button className="bg-indigo-600 hover:bg-indigo-700">
@@ -358,8 +377,15 @@ const MatterDetail = () => {
           {tasks.length === 0 ? (
             <div className="text-center py-12">
               <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No tasks</h3>
-              <p className="mt-1 text-sm text-gray-500">Create tasks for this matter to track progress and assignments.</p>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {currentUser && currentUser.person ? "No tasks assigned to you" : "No tasks"}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {currentUser && currentUser.person 
+                  ? "You don't have any tasks assigned for this matter yet."
+                  : "Create tasks for this matter to track progress and assignments."
+                }
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -454,7 +480,7 @@ const MatterDetail = () => {
                         {person.firstName} {person.lastName}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {person.type.replace('_', ' ')}
+                        {person.type ? person.type.replace('_', ' ') : 'No type specified'}
                       </div>
                     </div>
                   </label>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Plus, DollarSign, FileText, Calendar, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import Layout from '../components/Layout';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -121,7 +122,8 @@ const Invoices = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <Layout>
+      <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
         <Link
@@ -270,6 +272,7 @@ const Invoices = () => {
         </div>
       )}
     </div>
+    </Layout>
   );
 };
 

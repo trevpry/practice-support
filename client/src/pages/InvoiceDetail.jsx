@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, DollarSign, Calendar, CheckCircle, XCircle, FileText, Building2, Briefcase, Receipt } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, DollarSign, Calendar, CheckCircle, XCircle, FileText, Building2, Briefcase, Receipt, FileSignature } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const InvoiceDetail = () => {
@@ -327,6 +327,39 @@ const InvoiceDetail = () => {
                   <label className="block text-sm font-medium text-gray-500">Description</label>
                   <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
                     {invoice.estimate.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Related Vendor Agreement */}
+          {invoice.vendorAgreement && (
+            <div className="bg-white shadow-sm rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <FileSignature className="w-5 h-5 mr-2" />
+                Related Vendor Agreement
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <Link
+                    to={`/vendor-agreements/${invoice.vendorAgreement.id}`}
+                    className="text-blue-600 hover:text-blue-900 font-medium"
+                  >
+                    View Agreement Details
+                  </Link>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Signed By</label>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {invoice.vendorAgreement.signedBy}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Agreement Text</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                    {invoice.vendorAgreement.agreementText.substring(0, 200)}
+                    {invoice.vendorAgreement.agreementText.length > 200 ? '...' : ''}
                   </p>
                 </div>
               </div>

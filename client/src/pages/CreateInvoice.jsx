@@ -8,6 +8,7 @@ const CreateInvoice = () => {
   const [matters, setMatters] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [estimates, setEstimates] = useState([]);
+  const [vendorAgreements, setVendorAgreements] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [formData, setFormData] = useState({
     invoiceDate: new Date().toISOString().split('T')[0],
@@ -16,7 +17,8 @@ const CreateInvoice = () => {
     status: 'RECEIVED',
     matterId: '',
     organizationId: '',
-    estimateId: ''
+    estimateId: '',
+    vendorAgreementId: ''
   });
 
   useEffect(() => {
@@ -26,9 +28,11 @@ const CreateInvoice = () => {
   useEffect(() => {
     if (formData.matterId && formData.organizationId) {
       fetchEstimates();
+      fetchVendorAgreements();
     } else {
       setEstimates([]);
-      setFormData(prev => ({ ...prev, estimateId: '' }));
+      setVendorAgreements([]);
+      setFormData(prev => ({ ...prev, estimateId: '', vendorAgreementId: '' }));
     }
   }, [formData.matterId, formData.organizationId]);
 
@@ -79,6 +83,26 @@ const CreateInvoice = () => {
     }
   };
 
+  const fetchVendorAgreements = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/vendor-agreements');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vendor agreements');
+      }
+      const data = await response.json();
+      
+      // Filter vendor agreements that match the selected matter and organization
+      const filteredAgreements = data.filter(
+        agreement => agreement.matterId === parseInt(formData.matterId) && 
+                    agreement.organizationId === parseInt(formData.organizationId)
+      );
+      
+      setVendorAgreements(filteredAgreements);
+    } catch (error) {
+      console.error('Error fetching vendor agreements:', error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -102,6 +126,7 @@ const CreateInvoice = () => {
           matterId: parseInt(formData.matterId),
           organizationId: parseInt(formData.organizationId),
           estimateId: formData.estimateId ? parseInt(formData.estimateId) : null,
+          vendorAgreementId: formData.vendorAgreementId ? parseInt(formData.vendorAgreementId) : null,
           invoiceAmount: parseFloat(formData.invoiceAmount)
         }),
       });
@@ -253,6 +278,33 @@ const CreateInvoice = () => {
               )}
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Related Vendor Agreement (Optional)
+              </label>
+              <select
+                name="vendorAgreementId"
+                value={formData.vendorAgreementId}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                disabled={!formData.matterId || !formData.organizationId}
+              >
+                <option value="">No related agreement</option>
+                {vendorAgreements.map(agreement => (
+                  <option key={agreement.id} value={agreement.id}>
+                    Agreement #{agreement.id} - {agreement.signedBy}
+                  </option>
+                ))}
+              </select>
+              {(!formData.matterId || !formData.organizationId) && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Select matter and vendor first to see available agreements
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status

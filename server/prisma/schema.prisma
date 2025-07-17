@@ -221,22 +221,25 @@ model VendorAgreement {
   matter          Matter       @relation(fields: [matterId], references: [id], onDelete: Cascade)
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   estimate        Estimate?    @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  invoices        Invoice[]    // Invoices linked to this agreement
 }
 
 model Invoice {
-  id              Int          @id @default(autoincrement())
-  invoiceDate     DateTime     // Date of the invoice
-  invoiceAmount   Float        // Dollar amount of the invoice
-  approved        Boolean      @default(false) // Whether invoice is approved
-  status          InvoiceStatus @default(RECEIVED) // Invoice status
-  matterId        Int          // Required matter assignment
-  organizationId  Int          // Required vendor organization
-  estimateId      Int?         // Optional estimate connection
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                  Int               @id @default(autoincrement())
+  invoiceDate         DateTime          // Date of the invoice
+  invoiceAmount       Float             // Dollar amount of the invoice
+  approved            Boolean           @default(false) // Whether invoice is approved
+  status              InvoiceStatus     @default(RECEIVED) // Invoice status
+  matterId            Int               // Required matter assignment
+  organizationId      Int               // Required vendor organization
+  estimateId          Int?              // Optional estimate connection
+  vendorAgreementId   Int?              // Optional vendor agreement connection
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
   
   // Relationships
-  matter          Matter       @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  estimate        Estimate?    @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  matter              Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  organization        Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  estimate            Estimate?         @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  vendorAgreement     VendorAgreement?  @relation(fields: [vendorAgreementId], references: [id], onDelete: SetNull)
 }

@@ -12,7 +12,8 @@ const getInvoices = async (req, res) => {
           }
         },
         organization: true,
-        estimate: true
+        estimate: true,
+        vendorAgreement: true
       },
       orderBy: {
         invoiceDate: 'desc'
@@ -38,7 +39,8 @@ const getInvoiceById = async (req, res) => {
           }
         },
         organization: true,
-        estimate: true
+        estimate: true,
+        vendorAgreement: true
       }
     });
     
@@ -93,7 +95,7 @@ const getInvoiceStatusOptions = async (req, res) => {
 // Create invoice
 const createInvoice = async (req, res) => {
   try {
-    const { invoiceDate, invoiceAmount, approved, status, matterId, organizationId, estimateId } = req.body;
+    const { invoiceDate, invoiceAmount, approved, status, matterId, organizationId, estimateId, vendorAgreementId } = req.body;
     
     // Validate required fields
     if (!invoiceDate || invoiceAmount === undefined || !matterId || !organizationId) {
@@ -129,6 +131,17 @@ const createInvoice = async (req, res) => {
       }
     }
     
+    // If vendor agreement is provided, verify it exists and belongs to the same matter and organization
+    if (vendorAgreementId) {
+      const vendorAgreement = await prisma.vendorAgreement.findUnique({
+        where: { id: vendorAgreementId }
+      });
+      
+      if (!vendorAgreement || vendorAgreement.matterId !== matterId || vendorAgreement.organizationId !== organizationId) {
+        return res.status(400).json({ error: 'Vendor agreement must belong to the same matter and organization' });
+      }
+    }
+    
     const invoice = await prisma.invoice.create({
       data: {
         invoiceDate: new Date(invoiceDate),
@@ -137,7 +150,8 @@ const createInvoice = async (req, res) => {
         status: status || 'RECEIVED',
         matterId,
         organizationId,
-        estimateId: estimateId || null
+        estimateId: estimateId || null,
+        vendorAgreementId: vendorAgreementId || null
       },
       include: {
         matter: {
@@ -146,7 +160,8 @@ const createInvoice = async (req, res) => {
           }
         },
         organization: true,
-        estimate: true
+        estimate: true,
+        vendorAgreement: true
       }
     });
     
@@ -161,7 +176,7 @@ const createInvoice = async (req, res) => {
 const updateInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-    const { invoiceDate, invoiceAmount, approved, status, matterId, organizationId, estimateId } = req.body;
+    const { invoiceDate, invoiceAmount, approved, status, matterId, organizationId, estimateId, vendorAgreementId } = req.body;
     
     // Check if invoice exists
     const existingInvoice = await prisma.invoice.findUnique({
@@ -206,6 +221,17 @@ const updateInvoice = async (req, res) => {
       }
     }
     
+    // If vendor agreement is provided, verify it exists and belongs to the same matter and organization
+    if (vendorAgreementId) {
+      const vendorAgreement = await prisma.vendorAgreement.findUnique({
+        where: { id: vendorAgreementId }
+      });
+      
+      if (!vendorAgreement || vendorAgreement.matterId !== matterId || vendorAgreement.organizationId !== organizationId) {
+        return res.status(400).json({ error: 'Vendor agreement must belong to the same matter and organization' });
+      }
+    }
+    
     const invoice = await prisma.invoice.update({
       where: { id: parseInt(id) },
       data: {
@@ -215,7 +241,8 @@ const updateInvoice = async (req, res) => {
         status,
         matterId,
         organizationId,
-        estimateId: estimateId || null
+        estimateId: estimateId || null,
+        vendorAgreementId: vendorAgreementId || null
       },
       include: {
         matter: {
@@ -224,7 +251,8 @@ const updateInvoice = async (req, res) => {
           }
         },
         organization: true,
-        estimate: true
+        estimate: true,
+        vendorAgreement: true
       }
     });
     

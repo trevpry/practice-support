@@ -183,6 +183,24 @@ const CustodianDetail = () => {
                     </dd>
                   </div>
                 )}
+                {custodian.matter && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Matter</dt>
+                    <dd className="text-sm text-gray-900">
+                      <Link
+                        to={`/matters/${custodian.matter.id}`}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        {custodian.matter.matterName}
+                      </Link>
+                      {custodian.matter.client && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Client: {custodian.matter.client.clientName}
+                        </div>
+                      )}
+                    </dd>
+                  </div>
+                )}
                 {custodian.department && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Department</dt>
@@ -254,7 +272,9 @@ const CustodianDetail = () => {
 
               {custodian.collections && custodian.collections.length > 0 ? (
                 <div className="space-y-4">
-                  {custodian.collections.map((collection) => (
+                  {custodian.collections.map((collectionCustodian) => {
+                    const collection = collectionCustodian.collection;
+                    return (
                     <div key={collection.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -276,7 +296,7 @@ const CustodianDetail = () => {
                                 {collection.matter.matterName}
                               </Link>
                               {' - '}
-                              <span>{collection.matter.client.name}</span>
+                              <span>{collection.matter.client.clientName}</span>
                             </p>
                             {collection.organization && (
                               <p className="text-sm text-gray-600">
@@ -320,7 +340,8 @@ const CustodianDetail = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8">

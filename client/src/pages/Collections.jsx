@@ -184,16 +184,27 @@ const Collections = () => {
                               {collection.matter.matterName}
                             </Link>
                             <span className="mx-1">•</span>
-                            <span>{collection.matter.client.name}</span>
+                            <span>{collection.matter.client.clientName}</span>
                           </div>
                           <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                             <User className="w-4 h-4 mr-1" />
-                            <Link
-                              to={`/custodians/${collection.custodian.id}`}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              {collection.custodian.name}
-                            </Link>
+                            {collection.custodians && collection.custodians.length > 0 ? (
+                              <span>
+                                {collection.custodians.map((custodianRelation, index) => (
+                                  <span key={custodianRelation.custodian.id}>
+                                    <Link
+                                      to={`/custodians/${custodianRelation.custodian.id}`}
+                                      className="text-blue-600 hover:text-blue-900"
+                                    >
+                                      {custodianRelation.custodian.name}
+                                    </Link>
+                                    {index < collection.custodians.length - 1 && ', '}
+                                  </span>
+                                ))}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">No custodians</span>
+                            )}
                           </div>
                           {collection.organization && (
                             <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">

@@ -75,6 +75,19 @@ enum CollectionType {
   OTHER
 }
 
+enum EmailPlatform {
+  OUTLOOK
+  GMAIL
+  OTHER
+}
+
+enum WorkspaceType {
+  ECA
+  REVIEW
+  RSMF
+  OTHER
+}
+
 model Organization {
   id              Int              @id @default(autoincrement())
   name            String
@@ -98,6 +111,7 @@ model Organization {
   invoices        Invoice[]
   collections     Collection[]
   custodians      Custodian[]
+  workspaces      Workspace[]
 }
 
 model Person {
@@ -163,6 +177,8 @@ model Matter {
   vendorAgreements VendorAgreement[]
   invoices     Invoice[]
   collections  Collection[]
+  workspaces   Workspace[]
+  custodians   Custodian[]
 }
 
 model MatterPerson {
@@ -273,29 +289,58 @@ model Custodian {
   state           String?       // Optional state
   zipCode         String?       // Optional zip code
   organizationId  Int           // Required organization (usually client)
+  matterId        Int           // Required matter assignment
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
   // Relationships
   organization    Organization  @relation(fields: [organizationId], references: [id])
-  collections     Collection[]  // Collections for this custodian
+  matter          Matter        @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  collections     CollectionCustodian[] // Collections for this custodian via junction table
 }
 
 model Collection {
   id              Int               @id @default(autoincrement())
   status          CollectionStatus  @default(DISCUSSING) // Collection status
   type            CollectionType    // Type of collection (Email, Mobile, etc.)
+  platform        EmailPlatform?    // Optional platform for email collections
   scheduledDate   DateTime?         // Optional scheduled date
   completedDate   DateTime?         // Optional completed date
   notes           String?           // Optional notes
   matterId        Int               // Required matter assignment
   organizationId  Int?              // Optional vendor organization
-  custodianId     Int               // Required custodian assignment
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   
   // Relationships
   matter          Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
   organization    Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  custodian       Custodian         @relation(fields: [custodianId], references: [id], onDelete: Cascade)
+  custodians      CollectionCustodian[] // Many-to-many relationship with custodians
+}
+
+model CollectionCustodian {
+  id           Int        @id @default(autoincrement())
+  collectionId Int
+  custodianId  Int
+  createdAt    DateTime   @default(now())
+  
+  // Relationships
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  custodian    Custodian  @relation(fields: [custodianId], references: [id], onDelete: Cascade)
+  
+  @@unique([collectionId, custodianId])
+}
+
+model Workspace {
+  id              Int           @id @default(autoincrement())
+  url             String        // Relativity workspace URL
+  type            WorkspaceType // Workspace type (ECA, REVIEW, RSMF, OTHER)
+  matterId        Int           // Required matter assignment
+  organizationId  Int           // Required organization (hosted by)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relationships
+  matter          Matter        @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }

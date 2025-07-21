@@ -9,6 +9,7 @@ const CreateCustodian = () => {
     department: '',
     title: '',
     organizationId: '',
+    matterId: '',
     email: '',
     streetAddress: '',
     city: '',
@@ -16,23 +17,34 @@ const CreateCustodian = () => {
     zipCode: ''
   });
   const [organizations, setOrganizations] = useState([]);
+  const [matters, setMatters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchOrganizations();
+    fetchInitialData();
   }, []);
 
-  const fetchOrganizations = async () => {
+  const fetchInitialData = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/organizations');
-      if (!response.ok) {
-        throw new Error('Failed to fetch organizations');
+      const [orgsRes, mattersRes] = await Promise.all([
+        fetch('http://localhost:5001/api/organizations'),
+        fetch('http://localhost:5001/api/matters')
+      ]);
+
+      if (!orgsRes.ok || !mattersRes.ok) {
+        throw new Error('Failed to fetch required data');
       }
-      const data = await response.json();
-      setOrganizations(data);
+
+      const [orgsData, mattersData] = await Promise.all([
+        orgsRes.json(),
+        mattersRes.json()
+      ]);
+
+      setOrganizations(orgsData);
+      setMatters(mattersData);
     } catch (error) {
       setErrors({ fetch: error.message });
     } finally {
@@ -64,6 +76,10 @@ const CreateCustodian = () => {
     
     if (!formData.organizationId) {
       newErrors.organizationId = 'Organization is required';
+    }
+
+    if (!formData.matterId) {
+      newErrors.matterId = 'Matter is required';
     }
     
     setErrors(newErrors);
@@ -181,6 +197,31 @@ const CreateCustodian = () => {
               </select>
               {errors.organizationId && (
                 <p className="mt-1 text-sm text-red-600">{errors.organizationId}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="matterId" className="block text-sm font-medium text-gray-700 mb-1">
+                Matter *
+              </label>
+              <select
+                id="matterId"
+                name="matterId"
+                value={formData.matterId}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.matterId ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                }`}
+              >
+                <option value="">Select matter...</option>
+                {matters.map(matter => (
+                  <option key={matter.id} value={matter.id}>
+                    {matter.matterNumber} - {matter.title} ({matter.client.clientName})
+                  </option>
+                ))}
+              </select>
+              {errors.matterId && (
+                <p className="mt-1 text-sm text-red-600">{errors.matterId}</p>
               )}
             </div>
 

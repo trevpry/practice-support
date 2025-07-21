@@ -12,7 +12,15 @@ const getCollections = async (req, res) => {
           }
         },
         organization: true,
-        custodian: true
+        custodians: {
+          include: {
+            custodian: {
+              include: {
+                organization: true
+              }
+            }
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -38,7 +46,15 @@ const getCollectionById = async (req, res) => {
           }
         },
         organization: true,
-        custodian: true
+        custodians: {
+          include: {
+            custodian: {
+              include: {
+                organization: true
+              }
+            }
+          }
+        }
       }
     });
     
@@ -66,7 +82,15 @@ const getCollectionsByMatter = async (req, res) => {
           }
         },
         organization: true,
-        custodian: true
+        custodians: {
+          include: {
+            custodian: {
+              include: {
+                organization: true
+              }
+            }
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -111,14 +135,29 @@ const getCollectionTypeOptions = async (req, res) => {
   }
 };
 
+// Get email platform options
+const getEmailPlatformOptions = async (req, res) => {
+  try {
+    const platformOptions = [
+      { value: 'OUTLOOK', label: 'Outlook' },
+      { value: 'GMAIL', label: 'Gmail' },
+      { value: 'OTHER', label: 'Other' }
+    ];
+    res.json(platformOptions);
+  } catch (error) {
+    console.error('Error fetching email platform options:', error);
+    res.status(500).json({ error: 'Failed to fetch email platform options' });
+  }
+};
+
 // Create collection
 const createCollection = async (req, res) => {
   try {
-    const { status, type, scheduledDate, completedDate, notes, matterId, organizationId, custodianId } = req.body;
+    const { status, type, platform, scheduledDate, completedDate, notes, matterId, organizationId, custodianIds } = req.body;
     
     // Validate required fields
-    if (!type || !matterId || !custodianId) {
-      return res.status(400).json({ error: 'Type, matter, and custodian are required' });
+    if (!type || !matterId || !custodianIds || !Array.isArray(custodianIds) || custodianIds.length === 0) {
+      return res.status(400).json({ error: 'Type, matter, and at least one custodian are required' });
     }
     
     // Verify the matter exists
@@ -130,13 +169,13 @@ const createCollection = async (req, res) => {
       return res.status(400).json({ error: 'Matter not found' });
     }
     
-    // Verify the custodian exists
-    const custodian = await prisma.custodian.findUnique({
-      where: { id: custodianId }
+    // Verify all custodians exist
+    const custodians = await prisma.custodian.findMany({
+      where: { id: { in: custodianIds.map(id => parseInt(id)) } }
     });
     
-    if (!custodian) {
-      return res.status(400).json({ error: 'Custodian not found' });
+    if (custodians.length !== custodianIds.length) {
+      return res.status(400).json({ error: 'One or more custodians not found' });
     }
     
     // If organization is provided, verify it exists and is a vendor
@@ -154,12 +193,17 @@ const createCollection = async (req, res) => {
       data: {
         status: status || 'DISCUSSING',
         type,
+        platform: platform || null,
         scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
         completedDate: completedDate ? new Date(completedDate) : null,
         notes: notes || null,
         matterId,
         organizationId: organizationId || null,
-        custodianId
+        custodians: {
+          create: custodianIds.map(custodianId => ({
+            custodianId: parseInt(custodianId)
+          }))
+        }
       },
       include: {
         matter: {
@@ -168,7 +212,15 @@ const createCollection = async (req, res) => {
           }
         },
         organization: true,
-        custodian: true
+        custodians: {
+          include: {
+            custodian: {
+              include: {
+                organization: true
+              }
+            }
+          }
+        }
       }
     });
     
@@ -183,7 +235,7 @@ const createCollection = async (req, res) => {
 const updateCollection = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, type, scheduledDate, completedDate, notes, matterId, organizationId, custodianId } = req.body;
+    const { status, type, platform, scheduledDate, completedDate, notes, matterId, organizationId, custodianIds } = req.body;
     
     // Check if collection exists
     const existingCollection = await prisma.collection.findUnique({
@@ -195,8 +247,8 @@ const updateCollection = async (req, res) => {
     }
     
     // Validate required fields
-    if (!type || !matterId || !custodianId) {
-      return res.status(400).json({ error: 'Type, matter, and custodian are required' });
+    if (!type || !matterId || !custodianIds || !Array.isArray(custodianIds) || custodianIds.length === 0) {
+      return res.status(400).json({ error: 'Type, matter, and at least one custodian are required' });
     }
     
     // Verify the matter exists
@@ -208,13 +260,13 @@ const updateCollection = async (req, res) => {
       return res.status(400).json({ error: 'Matter not found' });
     }
     
-    // Verify the custodian exists
-    const custodian = await prisma.custodian.findUnique({
-      where: { id: custodianId }
+    // Verify all custodians exist
+    const custodians = await prisma.custodian.findMany({
+      where: { id: { in: custodianIds.map(id => parseInt(id)) } }
     });
     
-    if (!custodian) {
-      return res.status(400).json({ error: 'Custodian not found' });
+    if (custodians.length !== custodianIds.length) {
+      return res.status(400).json({ error: 'One or more custodians not found' });
     }
     
     // If organization is provided, verify it exists and is a vendor
@@ -233,12 +285,18 @@ const updateCollection = async (req, res) => {
       data: {
         status,
         type,
+        platform: platform || null,
         scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
         completedDate: completedDate ? new Date(completedDate) : null,
         notes: notes || null,
         matterId,
         organizationId: organizationId || null,
-        custodianId
+        custodians: {
+          deleteMany: {}, // Remove all existing custodian relationships
+          create: custodianIds.map(custodianId => ({
+            custodianId: parseInt(custodianId)
+          }))
+        }
       },
       include: {
         matter: {
@@ -247,7 +305,15 @@ const updateCollection = async (req, res) => {
           }
         },
         organization: true,
-        custodian: true
+        custodians: {
+          include: {
+            custodian: {
+              include: {
+                organization: true
+              }
+            }
+          }
+        }
       }
     });
     
@@ -289,6 +355,7 @@ module.exports = {
   getCollectionsByMatter,
   getCollectionStatusOptions,
   getCollectionTypeOptions,
+  getEmailPlatformOptions,
   createCollection,
   updateCollection,
   deleteCollection

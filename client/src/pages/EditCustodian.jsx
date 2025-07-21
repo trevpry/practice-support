@@ -9,6 +9,7 @@ const EditCustodian = () => {
     department: '',
     title: '',
     organizationId: '',
+    matterId: '',
     email: '',
     streetAddress: '',
     city: '',
@@ -16,6 +17,7 @@ const EditCustodian = () => {
     zipCode: ''
   });
   const [organizations, setOrganizations] = useState([]);
+  const [matters, setMatters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errors, setErrors] = useState({});
@@ -28,26 +30,30 @@ const EditCustodian = () => {
 
   const fetchData = async () => {
     try {
-      const [custodianRes, organizationsRes] = await Promise.all([
+      const [custodianRes, organizationsRes, mattersRes] = await Promise.all([
         fetch(`http://localhost:5001/api/custodians/${id}`),
-        fetch('http://localhost:5001/api/organizations')
+        fetch('http://localhost:5001/api/organizations'),
+        fetch('http://localhost:5001/api/matters')
       ]);
 
-      if (!custodianRes.ok || !organizationsRes.ok) {
+      if (!custodianRes.ok || !organizationsRes.ok || !mattersRes.ok) {
         throw new Error('Failed to fetch data');
       }
 
-      const [custodianData, organizationsData] = await Promise.all([
+      const [custodianData, organizationsData, mattersData] = await Promise.all([
         custodianRes.json(),
-        organizationsRes.json()
+        organizationsRes.json(),
+        mattersRes.json()
       ]);
 
       setOrganizations(organizationsData);
+      setMatters(mattersData);
       setFormData({
         name: custodianData.name || '',
         department: custodianData.department || '',
         title: custodianData.title || '',
         organizationId: custodianData.organizationId?.toString() || '',
+        matterId: custodianData.matterId?.toString() || '',
         email: custodianData.email || '',
         streetAddress: custodianData.streetAddress || '',
         city: custodianData.city || '',
@@ -85,6 +91,10 @@ const EditCustodian = () => {
     
     if (!formData.organizationId) {
       newErrors.organizationId = 'Organization is required';
+    }
+
+    if (!formData.matterId) {
+      newErrors.matterId = 'Matter is required';
     }
     
     setErrors(newErrors);
@@ -202,6 +212,31 @@ const EditCustodian = () => {
               </select>
               {errors.organizationId && (
                 <p className="mt-1 text-sm text-red-600">{errors.organizationId}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="matterId" className="block text-sm font-medium text-gray-700 mb-1">
+                Matter *
+              </label>
+              <select
+                id="matterId"
+                name="matterId"
+                value={formData.matterId}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.matterId ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                }`}
+              >
+                <option value="">Select matter...</option>
+                {matters.map(matter => (
+                  <option key={matter.id} value={matter.id}>
+                    {matter.matterNumber} - {matter.title} ({matter.client.clientName})
+                  </option>
+                ))}
+              </select>
+              {errors.matterId && (
+                <p className="mt-1 text-sm text-red-600">{errors.matterId}</p>
               )}
             </div>
 

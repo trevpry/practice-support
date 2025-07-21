@@ -25,6 +25,8 @@ import Collections from './pages/Collections';
 import CollectionDetail from './pages/CollectionDetail';
 import CreateCollection from './pages/CreateCollection';
 import EditCollection from './pages/EditCollection';
+import CreateWorkspace from './pages/CreateWorkspace';
+import EditWorkspace from './pages/EditWorkspace';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Users from './pages/Users';
@@ -61,6 +63,8 @@ const App = () => {
         <Route path="/collections/new" element={<CreateCollection />} />
         <Route path="/collections/:id" element={<CollectionDetail />} />
         <Route path="/collections/:id/edit" element={<EditCollection />} />
+        <Route path="/workspaces/create" element={<CreateWorkspace />} />
+        <Route path="/workspaces/:id/edit" element={<EditWorkspace />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/users" element={<Users />} />

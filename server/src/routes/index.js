@@ -64,6 +64,9 @@ const custodianRoutes = require('./custodianRoutes');
 // Collection routes
 const collectionRoutes = require('./collectionRoutes');
 
+// Workspace routes
+const workspaceRoutes = require('./workspaceRoutes');
+
 // Client routes
 router.get('/clients', getClients);
 router.get('/clients/:id', getClient);
@@ -122,6 +125,9 @@ router.use('/custodians', custodianRoutes);
 
 // Collection routes
 router.use('/collections', collectionRoutes);
+
+// Workspace routes
+router.use('/workspaces', workspaceRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {

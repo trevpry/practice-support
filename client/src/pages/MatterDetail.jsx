@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { ArrowLeft, Edit, Trash2, User, Users, Building, X, Plus, CheckSquare, Calendar, AlertCircle, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, User, Users, Building, X, Plus, CheckSquare, Calendar, AlertCircle, DollarSign, FileText, Archive } from 'lucide-react';
 
 const MatterDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [matter, setMatter] = useState(null);
-  const [tasks, setTasks] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [workspaces, setWorkspaces] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,18 +52,27 @@ const MatterDetail = () => {
       }
     };
 
-    const fetchTasks = async () => {
+    const fetchCollections = async () => {
       try {
-        // Get current user's tasks and filter by matter
-        const userTasksResponse = await fetch('/api/auth/current-user/tasks');
-        if (userTasksResponse.ok) {
-          const allUserTasks = await userTasksResponse.json();
-          // Filter tasks that belong to this matter
-          const matterTasks = allUserTasks.filter(task => task.matterId === parseInt(id));
-          setTasks(matterTasks);
+        const response = await fetch(`http://localhost:5001/api/collections/matter/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCollections(data);
         }
       } catch (err) {
-        console.error('Error fetching tasks:', err);
+        console.error('Error fetching collections:', err);
+      }
+    };
+
+    const fetchWorkspaces = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/api/workspaces/matter/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setWorkspaces(data);
+        }
+      } catch (err) {
+        console.error('Error fetching workspaces:', err);
       }
     };
 
@@ -104,7 +114,8 @@ const MatterDetail = () => {
 
     fetchCurrentUser();
     fetchMatter();
-    fetchTasks();
+    fetchCollections();
+    fetchWorkspaces();
     fetchEstimates();
     fetchVendorAgreements();
     fetchInvoices();
@@ -208,41 +219,78 @@ const MatterDetail = () => {
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'URGENT': return 'text-red-600 bg-red-100';
-      case 'HIGH': return 'text-orange-600 bg-orange-100';
-      case 'MEDIUM': return 'text-yellow-600 bg-yellow-100';
-      case 'LOW': return 'text-green-600 bg-green-100';
+  const getCollectionStatusColor = (status) => {
+    switch (status) {
+      case 'DISCUSSING': return 'text-yellow-600 bg-yellow-100';
+      case 'SCHEDULED': return 'text-blue-600 bg-blue-100';
+      case 'IN_PROGRESS': return 'text-orange-600 bg-orange-100';
+      case 'COMPLETED': return 'text-green-600 bg-green-100';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'TODO': return 'text-gray-600 bg-gray-100';
-      case 'IN_PROGRESS': return 'text-blue-600 bg-blue-100';
-      case 'COMPLETED': return 'text-green-600 bg-green-100';
-      case 'ON_HOLD': return 'text-yellow-600 bg-yellow-100';
+  const getCollectionTypeColor = (type) => {
+    switch (type) {
+      case 'EMAIL': return 'text-blue-600 bg-blue-100';
+      case 'MOBILE': return 'text-purple-600 bg-purple-100';
+      case 'COMPUTER': return 'text-green-600 bg-green-100';
+      case 'OTHER': return 'text-gray-600 bg-gray-100';
       default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getWorkspaceTypeColor = (type) => {
+    switch (type) {
+      case 'ECA': return 'text-purple-600 bg-purple-100';
+      case 'REVIEW': return 'text-blue-600 bg-blue-100';
+      case 'RSMF': return 'text-green-600 bg-green-100';
+      case 'OTHER': return 'text-gray-600 bg-gray-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const formatWorkspaceType = (type) => {
+    switch (type) {
+      case 'ECA': return 'ECA';
+      case 'REVIEW': return 'Review';
+      case 'RSMF': return 'RSMF';
+      case 'OTHER': return 'Other';
+      default: return type;
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'No due date';
+    if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString();
   };
 
-  const isOverdue = (dueDate) => {
-    if (!dueDate) return false;
-    const today = new Date();
-    const taskDate = new Date(dueDate);
-    
-    // Set both dates to midnight for accurate comparison
-    today.setHours(0, 0, 0, 0);
-    taskDate.setHours(0, 0, 0, 0);
-    
-    return taskDate < today;
+  const formatStatus = (status) => {
+    switch (status) {
+      case 'DISCUSSING': return 'Discussing';
+      case 'SCHEDULED': return 'Scheduled';
+      case 'IN_PROGRESS': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      default: return status;
+    }
+  };
+
+  const formatType = (type) => {
+    switch (type) {
+      case 'EMAIL': return 'Email';
+      case 'MOBILE': return 'Mobile';
+      case 'COMPUTER': return 'Computer';
+      case 'OTHER': return 'Other';
+      default: return type;
+    }
+  };
+
+  const formatPlatform = (platform) => {
+    switch (platform) {
+      case 'OUTLOOK': return 'Outlook';
+      case 'GMAIL': return 'Gmail';
+      case 'OTHER': return 'Other';
+      default: return platform;
+    }
   };
 
   if (loading) return <Layout><div className="text-center py-8">Loading...</div></Layout>;
@@ -409,55 +457,115 @@ const MatterDetail = () => {
           )}
         </div>
 
-        {/* Matter Tasks */}
+        {/* Matter Workspaces */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">
-              {currentUser && currentUser.person ? "My Tasks" : "Matter Tasks"} ({tasks.length})
+              Workspaces ({workspaces.length})
             </h2>
-            <Link to="/tasks">
-              <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Link to="/workspaces/create">
+              <Button className="bg-purple-600 hover:bg-purple-700">
                 <Plus className="w-4 h-4 mr-2" />
-                Create Task
+                Create Workspace
               </Button>
             </Link>
           </div>
           
-          {tasks.length === 0 ? (
+          {workspaces.length === 0 ? (
             <div className="text-center py-12">
-              <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
+              <Building className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">
-                {currentUser && currentUser.person ? "No tasks assigned to you" : "No tasks"}
+                No workspaces
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                {currentUser && currentUser.person 
-                  ? "You don't have any tasks assigned for this matter yet."
-                  : "Create tasks for this matter to track progress and assignments."
-                }
+                Create workspaces for this matter to track Relativity environments.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {tasks.map((task) => (
-                <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              {workspaces.map((workspace) => (
+                <div key={workspace.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <a 
+                        href={workspace.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {workspace.url}
+                      </a>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getWorkspaceTypeColor(workspace.type)}`}>
+                        {formatWorkspaceType(workspace.type)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-4 w-4" />
+                      <span>Hosted by: {workspace.organization.name}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Matter Collections */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              Collections ({collections.length})
+            </h2>
+            <Link to="/collections">
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Collection
+              </Button>
+            </Link>
+          </div>
+          
+          {collections.length === 0 ? (
+            <div className="text-center py-12">
+              <Archive className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No collections
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Create collections for this matter to track data preservation and collection activities.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {collections.map((collection) => (
+                <div key={collection.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <Link 
-                        to={`/tasks/${task.id}`}
+                        to={`/collections/${collection.id}`}
                         className="text-lg font-medium text-blue-600 hover:text-blue-800"
                       >
-                        {task.title}
+                        {collection.custodians.map(c => c.custodian.name).join(', ')}
                       </Link>
-                      {task.description && (
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                      {collection.description && (
+                        <p className="text-sm text-gray-600 mt-1">{collection.description}</p>
                       )}
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCollectionTypeColor(collection.type)}`}>
+                        {formatType(collection.type)}
                       </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                        {task.status.replace('_', ' ')}
+                      {collection.platform && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {formatPlatform(collection.platform)}
+                        </span>
+                      )}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCollectionStatusColor(collection.status)}`}>
+                        {formatStatus(collection.status)}
                       </span>
                     </div>
                   </div>
@@ -465,24 +573,33 @@ const MatterDetail = () => {
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <User className="h-4 w-4" />
-                      <span>Owner: {task.owner.firstName} {task.owner.lastName}</span>
+                      <span>Custodian{collection.custodians.length > 1 ? 's' : ''}: {collection.custodians.map(c => c.custodian.name).join(', ')}</span>
                     </div>
                     
-                    {task.assignees && task.assignees.length > 0 && (
+                    {collection.custodians.length > 0 && collection.custodians[0].custodian.organization && (
                       <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>Assigned: {task.assignees.map(a => `${a.firstName} ${a.lastName}`).join(', ')}</span>
+                        <Building className="h-4 w-4" />
+                        <span>Organization: {collection.custodians[0].custodian.organization.name}</span>
                       </div>
                     )}
                     
-                    <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-600' : ''}`}>
-                      {isOverdue(task.dueDate) ? (
-                        <AlertCircle className="h-4 w-4" />
-                      ) : (
-                        <Calendar className="h-4 w-4" />
-                      )}
-                      <span>{formatDate(task.dueDate)}</span>
-                      {isOverdue(task.dueDate) && <span className="font-medium">(Overdue)</span>}
+                    {collection.organization && (
+                      <div className="flex items-center gap-1">
+                        <Building className="h-4 w-4" />
+                        <span>Vendor: {collection.organization.name}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {collection.completedDate 
+                          ? `Completed: ${formatDate(collection.completedDate)}`
+                          : collection.scheduledDate 
+                            ? `Scheduled: ${formatDate(collection.scheduledDate)}`
+                            : 'No date set'
+                        }
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -4,17 +4,30 @@ const prisma = new PrismaClient();
 // Get all custodians
 const getCustodians = async (req, res) => {
   try {
+    const { matterId } = req.query;
+    const whereClause = matterId ? { matterId: parseInt(matterId) } : {};
+    
     const custodians = await prisma.custodian.findMany({
+      where: whereClause,
       include: {
         organization: true,
+        matter: {
+          include: {
+            client: true
+          }
+        },
         collections: {
           include: {
-            matter: {
+            collection: {
               include: {
-                client: true
+                matter: {
+                  include: {
+                    client: true
+                  }
+                },
+                organization: true
               }
-            },
-            organization: true
+            }
           }
         }
       },
@@ -37,14 +50,23 @@ const getCustodianById = async (req, res) => {
       where: { id: parseInt(id) },
       include: {
         organization: true,
+        matter: {
+          include: {
+            client: true
+          }
+        },
         collections: {
           include: {
-            matter: {
+            collection: {
               include: {
-                client: true
+                matter: {
+                  include: {
+                    client: true
+                  }
+                },
+                organization: true
               }
-            },
-            organization: true
+            }
           }
         }
       }
@@ -64,7 +86,7 @@ const getCustodianById = async (req, res) => {
 // Create custodian
 const createCustodian = async (req, res) => {
   try {
-    const { name, email, department, title, streetAddress, city, state, zipCode, organizationId } = req.body;
+    const { name, email, department, title, streetAddress, city, state, zipCode, organizationId, matterId } = req.body;
     
     // Validate required fields
     if (!name) {
@@ -74,6 +96,10 @@ const createCustodian = async (req, res) => {
     if (!organizationId) {
       return res.status(400).json({ error: 'Organization is required' });
     }
+
+    if (!matterId) {
+      return res.status(400).json({ error: 'Matter is required' });
+    }
     
     // Verify organization exists
     const organization = await prisma.organization.findUnique({
@@ -82,6 +108,15 @@ const createCustodian = async (req, res) => {
     
     if (!organization) {
       return res.status(400).json({ error: 'Organization not found' });
+    }
+
+    // Verify matter exists
+    const matter = await prisma.matter.findUnique({
+      where: { id: parseInt(matterId) }
+    });
+    
+    if (!matter) {
+      return res.status(400).json({ error: 'Matter not found' });
     }
     
     const custodian = await prisma.custodian.create({
@@ -94,11 +129,30 @@ const createCustodian = async (req, res) => {
         city: city || null,
         state: state || null,
         zipCode: zipCode || null,
-        organizationId: parseInt(organizationId)
+        organizationId: parseInt(organizationId),
+        matterId: parseInt(matterId)
       },
       include: {
         organization: true,
-        collections: true
+        matter: {
+          include: {
+            client: true
+          }
+        },
+        collections: {
+          include: {
+            collection: {
+              include: {
+                matter: {
+                  include: {
+                    client: true
+                  }
+                },
+                organization: true
+              }
+            }
+          }
+        }
       }
     });
     
@@ -113,7 +167,7 @@ const createCustodian = async (req, res) => {
 const updateCustodian = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, department, title, organizationId, email, streetAddress, city, state, zipCode } = req.body;
+    const { name, department, title, organizationId, matterId, email, streetAddress, city, state, zipCode } = req.body;
     
     // Check if custodian exists
     const existingCustodian = await prisma.custodian.findUnique({
@@ -132,6 +186,10 @@ const updateCustodian = async (req, res) => {
     if (!organizationId) {
       return res.status(400).json({ error: 'Organization is required' });
     }
+
+    if (!matterId) {
+      return res.status(400).json({ error: 'Matter is required' });
+    }
     
     // Verify organization exists
     const organization = await prisma.organization.findUnique({
@@ -141,6 +199,15 @@ const updateCustodian = async (req, res) => {
     if (!organization) {
       return res.status(400).json({ error: 'Organization not found' });
     }
+
+    // Verify matter exists
+    const matter = await prisma.matter.findUnique({
+      where: { id: parseInt(matterId) }
+    });
+    
+    if (!matter) {
+      return res.status(400).json({ error: 'Matter not found' });
+    }
     
     const custodian = await prisma.custodian.update({
       where: { id: parseInt(id) },
@@ -149,6 +216,7 @@ const updateCustodian = async (req, res) => {
         department: department || null,
         title: title || null,
         organizationId: parseInt(organizationId),
+        matterId: parseInt(matterId),
         email: email || null,
         streetAddress: streetAddress || null,
         city: city || null,
@@ -157,14 +225,23 @@ const updateCustodian = async (req, res) => {
       },
       include: {
         organization: true,
+        matter: {
+          include: {
+            client: true
+          }
+        },
         collections: {
           include: {
-            matter: {
+            collection: {
               include: {
-                client: true
+                matter: {
+                  include: {
+                    client: true
+                  }
+                },
+                organization: true
               }
-            },
-            organization: true
+            }
           }
         }
       }

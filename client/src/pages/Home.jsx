@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Users, FileText, User, TrendingUp, CheckSquare, LayoutGrid } from 'lucide-react';
+import { Users, FileText, User, TrendingUp, CheckSquare, LayoutGrid, Database, Receipt } from 'lucide-react';
 
 // Helper function to check if a task is overdue
 const isOverdue = (dueDate) => {
@@ -41,6 +41,8 @@ const Home = () => {
     totalTasks: 0,
     activeTasks: 0,
     overdueTasks: 0,
+    totalCollections: 0,
+    totalInvoices: 0,
     matterStatusCounts: {},
     recentClients: [],
     recentMatters: [],
@@ -52,19 +54,23 @@ const Home = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [clientsResponse, mattersResponse, tasksResponse, userResponse] = await Promise.all([
+        const [clientsResponse, mattersResponse, tasksResponse, userResponse, collectionsResponse, invoicesResponse] = await Promise.all([
           fetch('/api/clients'),
           fetch('/api/matters'),
           fetch('/api/auth/current-user/tasks'),
-          fetch('/api/auth/current-user')
+          fetch('/api/auth/current-user'),
+          fetch('/api/collections'),
+          fetch('/api/invoices')
         ]);
 
-        if (clientsResponse.ok && mattersResponse.ok && tasksResponse.ok && userResponse.ok) {
-          const [allClients, allMatters, tasks, user] = await Promise.all([
+        if (clientsResponse.ok && mattersResponse.ok && tasksResponse.ok && userResponse.ok && collectionsResponse.ok && invoicesResponse.ok) {
+          const [allClients, allMatters, tasks, user, collections, invoices] = await Promise.all([
             clientsResponse.json(),
             mattersResponse.json(),
             tasksResponse.json(),
-            userResponse.json()
+            userResponse.json(),
+            collectionsResponse.json(),
+            invoicesResponse.json()
           ]);
 
           setCurrentUser(user);
@@ -103,12 +109,24 @@ const Home = () => {
             return acc;
           }, {});
 
+          // Calculate pending invoices (not Paid or Submitted)
+          const pendingInvoices = invoices.filter(invoice => 
+            invoice.status !== 'PAID' && invoice.status !== 'SUBMITTED'
+          ).length;
+
+          // Calculate active collections (not Completed)
+          const activeCollections = collections.filter(collection => 
+            collection.status !== 'COMPLETED'
+          ).length;
+
           setStats({
             totalClients: filteredClients.length,
             totalMatters: filteredMatters.length,
             totalTasks: tasks.length,
             activeTasks,
             overdueTasks,
+            totalCollections: activeCollections,
+            totalInvoices: pendingInvoices,
             matterStatusCounts,
             recentClients: filteredClients.slice(-5).reverse(),
             recentMatters: filteredMatters.slice(-5).reverse(),
@@ -199,7 +217,7 @@ const Home = () => {
         </div>
 
         {/* Task Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center">
               <CheckSquare className="h-8 w-8 text-blue-600" />
@@ -228,12 +246,20 @@ const Home = () => {
           
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center">
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <Database className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.totalTasks > 0 ? Math.round((stats.totalTasks - stats.activeTasks) / stats.totalTasks * 100) : 0}%
-                </p>
-                <p className="text-gray-600">Completion Rate</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalCollections}</p>
+                <p className="text-gray-600">Active Collections</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center">
+              <Receipt className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">{stats.totalInvoices}</p>
+                <p className="text-gray-600">Pending Invoices</p>
               </div>
             </div>
           </div>

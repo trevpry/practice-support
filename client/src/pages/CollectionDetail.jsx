@@ -81,6 +81,19 @@ const CollectionDetail = () => {
     }
   };
 
+  const formatPlatform = (platform) => {
+    switch (platform) {
+      case 'OUTLOOK':
+        return 'Outlook';
+      case 'GMAIL':
+        return 'Gmail';
+      case 'OTHER':
+        return 'Other';
+      default:
+        return platform;
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'DISCUSSING':
@@ -191,6 +204,12 @@ const CollectionDetail = () => {
                 <dt className="text-sm font-medium text-gray-500">Type</dt>
                 <dd className="text-sm text-gray-900">{formatType(collection.type)}</dd>
               </div>
+              {collection.platform && collection.type === 'EMAIL' && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Platform</dt>
+                  <dd className="text-sm text-gray-900">{formatPlatform(collection.platform)}</dd>
+                </div>
+              )}
               <div>
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
                 <dd className="text-sm text-gray-900">
@@ -213,19 +232,29 @@ const CollectionDetail = () => {
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Custodian</dt>
+                <dt className="text-sm font-medium text-gray-500">Custodian{collection.custodians && collection.custodians.length > 1 ? 's' : ''}</dt>
                 <dd className="text-sm text-gray-900">
-                  <Link
-                    to={`/custodians/${collection.custodian.id}`}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    <User className="w-4 h-4 inline mr-1" />
-                    {collection.custodian.name}
-                  </Link>
-                  {collection.custodian.organization && (
-                    <span className="text-gray-500">
-                      {' '}({collection.custodian.organization.name})
-                    </span>
+                  {collection.custodians && collection.custodians.length > 0 ? (
+                    <div className="space-y-1">
+                      {collection.custodians.map((custodianRelation, index) => (
+                        <div key={custodianRelation.custodian.id}>
+                          <Link
+                            to={`/custodians/${custodianRelation.custodian.id}`}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <User className="w-4 h-4 inline mr-1" />
+                            {custodianRelation.custodian.name}
+                          </Link>
+                          {custodianRelation.custodian.organization && (
+                            <span className="text-gray-500">
+                              {' '}({custodianRelation.custodian.organization.name})
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">No custodians assigned</span>
                   )}
                 </dd>
               </div>

@@ -6,9 +6,10 @@ import Layout from '../components/Layout';
 const EditCollection = () => {
   const [formData, setFormData] = useState({
     type: '',
+    platform: '',
     status: '',
     matterId: '',
-    custodianId: '',
+    custodianIds: [],
     organizationId: '',
     scheduledDate: '',
     completedDate: '',
@@ -19,6 +20,7 @@ const EditCollection = () => {
   const [organizations, setOrganizations] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [typeOptions, setTypeOptions] = useState([]);
+  const [platformOptions, setPlatformOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errors, setErrors] = useState({});
@@ -29,35 +31,41 @@ const EditCollection = () => {
     fetchInitialData();
   }, [id]);
 
+  useEffect(() => {
+    if (formData.matterId && !initialLoading) {
+      fetchCustodiansByMatter(formData.matterId);
+    }
+  }, [formData.matterId, initialLoading]);
+
   const fetchInitialData = async () => {
     try {
-      const [collectionRes, mattersRes, custodiansRes, orgsRes, statusRes, typeRes] = await Promise.all([
+      const [collectionRes, mattersRes, orgsRes, statusRes, typeRes, platformRes] = await Promise.all([
         fetch(`http://localhost:5001/api/collections/${id}`),
         fetch('http://localhost:5001/api/matters'),
-        fetch('http://localhost:5001/api/custodians'),
         fetch('http://localhost:5001/api/organizations'),
         fetch('http://localhost:5001/api/collections/status-options'),
-        fetch('http://localhost:5001/api/collections/type-options')
+        fetch('http://localhost:5001/api/collections/type-options'),
+        fetch('http://localhost:5001/api/collections/platform-options')
       ]);
 
-      if (!collectionRes.ok || !mattersRes.ok || !custodiansRes.ok || !orgsRes.ok || !statusRes.ok || !typeRes.ok) {
+      if (!collectionRes.ok || !mattersRes.ok || !orgsRes.ok || !statusRes.ok || !typeRes.ok || !platformRes.ok) {
         throw new Error('Failed to fetch required data');
       }
 
-      const [collectionData, mattersData, custodiansData, orgsData, statusData, typeData] = await Promise.all([
+      const [collectionData, mattersData, orgsData, statusData, typeData, platformData] = await Promise.all([
         collectionRes.json(),
         mattersRes.json(),
-        custodiansRes.json(),
         orgsRes.json(),
         statusRes.json(),
-        typeRes.json()
+        typeRes.json(),
+        platformRes.json()
       ]);
 
       setMatters(mattersData);
-      setCustodians(custodiansData);
       setOrganizations(orgsData);
       setStatusOptions(statusData);
       setTypeOptions(typeData);
+      setPlatformOptions(platformData);
 
       // Format dates for input fields
       const formatDate = (dateString) => {
@@ -65,16 +73,24 @@ const EditCollection = () => {
         return new Date(dateString).toISOString().split('T')[0];
       };
 
+      const matterId = collectionData.matterId?.toString() || '';
+      
       setFormData({
         type: collectionData.type || '',
+        platform: collectionData.platform || '',
         status: collectionData.status || '',
-        matterId: collectionData.matterId?.toString() || '',
-        custodianId: collectionData.custodianId?.toString() || '',
+        matterId,
+        custodianIds: collectionData.custodians?.map(cc => cc.custodian.id.toString()) || [],
         organizationId: collectionData.organizationId?.toString() || '',
         scheduledDate: formatDate(collectionData.scheduledDate),
         completedDate: formatDate(collectionData.completedDate),
         notes: collectionData.notes || ''
       });
+
+      // Fetch custodians for the matter after setting form data
+      if (matterId) {
+        await fetchCustodiansByMatter(matterId);
+      }
     } catch (error) {
       setErrors({ fetch: error.message });
     } finally {
@@ -82,17 +98,65 @@ const EditCollection = () => {
     }
   };
 
+  const fetchCustodiansByMatter = async (matterId) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/custodians?matterId=${matterId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch custodians');
+      }
+      const custodiansData = await response.json();
+      setCustodians(custodiansData);
+    } catch (error) {
+      setErrors(prev => ({ ...prev, custodians: error.message }));
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: value
+      };
+      
+      // Clear platform if type is not EMAIL
+      if (name === 'type' && value !== 'EMAIL') {
+        newData.platform = '';
+      }
+      
+      // Clear custodians if matter changes
+      if (name === 'matterId') {
+        newData.custodianIds = [];
+      }
+      
+      return newData;
+    });
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
+      }));
+    }
+  };
+
+  const handleCustodianChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData(prev => {
+      const custodianIds = checked 
+        ? [...prev.custodianIds, value]
+        : prev.custodianIds.filter(id => id !== value);
+      return {
+        ...prev,
+        custodianIds
+      };
+    });
+    
+    // Clear error when user selects custodians
+    if (errors.custodianIds) {
+      setErrors(prev => ({
+        ...prev,
+        custodianIds: ''
       }));
     }
   };
@@ -108,8 +172,8 @@ const EditCollection = () => {
       newErrors.matterId = 'Matter is required';
     }
     
-    if (!formData.custodianId) {
-      newErrors.custodianId = 'Custodian is required';
+    if (!formData.custodianIds || formData.custodianIds.length === 0) {
+      newErrors.custodianIds = 'At least one custodian is required';
     }
 
     if (formData.scheduledDate && formData.completedDate && new Date(formData.scheduledDate) > new Date(formData.completedDate)) {
@@ -133,7 +197,7 @@ const EditCollection = () => {
       const submitData = {
         ...formData,
         matterId: parseInt(formData.matterId),
-        custodianId: parseInt(formData.custodianId),
+        custodianIds: formData.custodianIds.map(id => parseInt(id)),
         organizationId: formData.organizationId ? parseInt(formData.organizationId) : null,
         scheduledDate: formData.scheduledDate || null,
         completedDate: formData.completedDate || null
@@ -224,6 +288,28 @@ const EditCollection = () => {
                 )}
               </div>
 
+              {formData.type === 'EMAIL' && (
+                <div>
+                  <label htmlFor="platform" className="block text-sm font-medium text-gray-700 mb-1">
+                    Platform
+                  </label>
+                  <select
+                    id="platform"
+                    name="platform"
+                    value={formData.platform}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select platform...</option>
+                    {platformOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status
@@ -260,7 +346,7 @@ const EditCollection = () => {
                 <option value="">Select matter...</option>
                 {matters.map(matter => (
                   <option key={matter.id} value={matter.id}>
-                    {matter.matterName} - {matter.client?.name}
+                    {matter.matterName} - {matter.client?.clientName}
                   </option>
                 ))}
               </select>
@@ -270,27 +356,35 @@ const EditCollection = () => {
             </div>
 
             <div>
-              <label htmlFor="custodianId" className="block text-sm font-medium text-gray-700 mb-1">
-                Custodian *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Custodians *
               </label>
-              <select
-                id="custodianId"
-                name="custodianId"
-                value={formData.custodianId}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.custodianId ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                }`}
-              >
-                <option value="">Select custodian...</option>
-                {custodians.map(custodian => (
-                  <option key={custodian.id} value={custodian.id}>
-                    {custodian.name} - {custodian.organization?.name || 'No Organization'}
-                  </option>
-                ))}
-              </select>
-              {errors.custodianId && (
-                <p className="mt-1 text-sm text-red-600">{errors.custodianId}</p>
+              <div className={`border rounded-md p-3 max-h-40 overflow-y-auto ${
+                errors.custodianIds ? 'border-red-300' : 'border-gray-300'
+              }`}>
+                {custodians.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No custodians available</p>
+                ) : (
+                  <div className="space-y-2">
+                    {custodians.map(custodian => (
+                      <label key={custodian.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          value={custodian.id}
+                          checked={formData.custodianIds.includes(custodian.id.toString())}
+                          onChange={handleCustodianChange}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          {custodian.name} - {custodian.organization?.name || 'No Organization'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {errors.custodianIds && (
+                <p className="mt-1 text-sm text-red-600">{errors.custodianIds}</p>
               )}
             </div>
 

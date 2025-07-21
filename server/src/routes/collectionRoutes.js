@@ -6,6 +6,7 @@ const {
   getCollectionsByMatter,
   getCollectionStatusOptions,
   getCollectionTypeOptions,
+  getEmailPlatformOptions,
   createCollection,
   updateCollection,
   deleteCollection
@@ -15,6 +16,7 @@ const {
 router.get('/', getCollections);
 router.get('/status-options', getCollectionStatusOptions);
 router.get('/type-options', getCollectionTypeOptions);
+router.get('/platform-options', getEmailPlatformOptions);
 router.get('/matter/:matterId', getCollectionsByMatter);
 router.get('/:id', getCollectionById);
 router.post('/', createCollection);

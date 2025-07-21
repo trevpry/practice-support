@@ -11,14 +11,14 @@
     "server": "npm --prefix server run start",
     "server:dev": "npm --prefix server run dev",
     "dev": "concurrently \"npm run client\" \"npm run server:dev\"",
-    "build": "npm --prefix server run db:setup && npm --prefix client run build && npm --prefix server run db:migrate && cp -r client/dist/* server/public/",
+    "build": "npm --prefix client install && npm --prefix server install && npm --prefix server run db:setup && npm --prefix client run build && npm --prefix server run db:migrate && cp -r client/dist/* server/public/",
     "start": "npm --prefix server run start",
     "setup": "npm install && npm --prefix client install && npm --prefix server install",
     "db:generate": "npm --prefix server run build",
     "db:migrate": "npm --prefix server run db:migrate",
     "db:migrate:dev": "cd server && npx prisma migrate dev",
     "db:setup": "npm --prefix server run db:setup",
-    "postinstall": "npm --prefix client install && npm --prefix server install"
+    "postinstall": "echo 'Dependencies will be installed individually during build'"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

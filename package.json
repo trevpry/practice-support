@@ -18,7 +18,7 @@
     "db:migrate": "npm --prefix server run db:migrate",
     "db:migrate:dev": "cd server && npx prisma migrate dev",
     "db:setup": "npm --prefix server run db:setup",
-    "postinstall": "npm --prefix client install && npm --prefix server install"
+    "postinstall": "echo 'Root dependencies installed'"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

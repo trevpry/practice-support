@@ -8,13 +8,29 @@ export DATABASE_PROVIDER=postgresql
 
 echo "Starting Render build process..."
 
-# Install dependencies
-echo "Installing dependencies..."
+# Install root dependencies first
+echo "Installing root dependencies..."
+npm install
+
+# Install client dependencies
+echo "Installing client dependencies..."
+cd client
+npm install
+echo "Client dependencies installed"
+
+# Build the client
+echo "Building client with Vite..."
+npm run build
+echo "Client build completed"
+
+# Go back to root and install server dependencies
+cd ../server
+echo "Installing server dependencies..."
 npm install
 
 # Setup database schema for production
 echo "Setting up database for production..."
-cd server && npm run db:setup
+npm run db:setup
 
 # Generate Prisma client
 echo "Generating Prisma client..."
@@ -24,12 +40,9 @@ npx prisma generate
 echo "Setting up database schema..."
 npm run db:migrate
 
-# Build the client
-echo "Building client..."
-cd ../client && npm run build
-
 # Copy client build to server public directory
 echo "Copying client build to server..."
-cp -r dist/* ../server/public/
+cd ..
+cp -r client/dist/* server/public/
 
 echo "Build process completed successfully!"

@@ -11,7 +11,7 @@
     "server": "npm --prefix server run start",
     "server:dev": "npm --prefix server run dev",
     "dev": "concurrently \"npm run client\" \"npm run server:dev\"",
-    "build": "npm --prefix client install && npm --prefix server install && npm --prefix server run db:setup && npm --prefix client run build && npm --prefix server run db:migrate && cp -r client/build/* server/public/",
+    "build": "npm --prefix client install && npm --prefix server install && npm --prefix server run db:setup && npm --prefix client run build && npm --prefix server run db:migrate && mkdir -p server/public && if [ -d \"client/build\" ]; then cp -r client/build/* server/public/; else echo 'No client build directory found'; fi",
     "start": "npm --prefix server run start",
     "setup": "npm install && npm --prefix client install && npm --prefix server install",
     "db:generate": "npm --prefix server run build",

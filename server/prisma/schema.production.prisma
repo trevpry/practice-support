@@ -1,0 +1,339 @@
+// This is your Prisma schema file for PRODUCTION (PostgreSQL),
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PersonType {
+  ATTORNEY
+  PARALEGAL
+  VENDOR
+  PROJECT_MANAGER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+}
+
+enum TaskPriority {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MatterStatus {
+  COLLECTION
+  CULLING
+  REVIEW
+  PRODUCTION
+  INACTIVE
+}
+
+enum OrganizationType {
+  CURRENT_LAW_FIRM
+  CO_COUNSEL
+  OPPOSING_COUNSEL
+  VENDOR
+  THIRD_PARTY
+}
+
+enum CollectionStatus {
+  DISCUSSING
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum CollectionType {
+  EMAIL
+  MOBILE
+  COMPUTER
+  OTHER
+}
+
+enum EmailPlatform {
+  OUTLOOK
+  GMAIL
+  OTHER
+}
+
+enum VendorAgreementSignedBy {
+  PROJECT_MANAGER
+  PARTNER
+  CLIENT
+}
+
+enum InvoiceStatus {
+  RECEIVED
+  SUBMITTED
+  QUESTION
+  PAID
+}
+
+enum WorkspaceType {
+  ECA
+  REVIEW
+  RSMF
+  OTHER
+}
+
+model Client {
+  id           Int      @id @default(autoincrement())
+  clientNumber String   @unique
+  clientName   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  matters       Matter[]
+  attorney      Person?  @relation("ClientAttorney", fields: [attorneyId], references: [id])
+  attorneyId    Int?
+  paralegal     Person?  @relation("ClientParalegal", fields: [paralegalId], references: [id])
+  paralegalId   Int?
+  projectManager Person? @relation("ClientProjectManager", fields: [projectManagerId], references: [id])
+  projectManagerId Int?
+}
+
+model Matter {
+  id          Int           @id @default(autoincrement())
+  matterNumber String       @unique
+  matterName  String
+  status      MatterStatus  @default(COLLECTION)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relationships
+  client      Client        @relation(fields: [clientId], references: [id])
+  clientId    Int
+  people      MatterPerson[]
+  tasks       Task[]
+  estimates   Estimate[]
+  vendorAgreements VendorAgreement[]
+  invoices    Invoice[]
+  collections Collection[]
+  workspaces  Workspace[]
+  custodians  Custodian[]
+}
+
+model Person {
+  id            Int        @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String?
+  phoneNumber   String?
+  personType    PersonType
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relationships
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId Int?
+  matters       MatterPerson[]
+  ownedTasks    Task[]        @relation("TaskOwner")
+  assignedTasks TaskAssignee[]
+  clientsAsAttorney      Client[] @relation("ClientAttorney")
+  clientsAsParalegal     Client[] @relation("ClientParalegal")
+  clientsAsProjectManager Client[] @relation("ClientProjectManager")
+  user          User?
+}
+
+model Organization {
+  id              Int              @id @default(autoincrement())
+  name            String
+  type            OrganizationType
+  website         String?
+  streetAddress   String?
+  city            String?
+  state           String?
+  zipCode         String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relationships
+  people          Person[]
+  estimates       Estimate[]
+  vendorAgreements VendorAgreement[]
+  invoices        Invoice[]
+  collections     Collection[]
+  workspaces      Workspace[]
+}
+
+model MatterPerson {
+  id       Int    @id @default(autoincrement())
+  matter   Matter @relation(fields: [matterId], references: [id])
+  matterId Int
+  person   Person @relation(fields: [personId], references: [id])
+  personId Int
+
+  @@unique([matterId, personId])
+}
+
+model Task {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relationships
+  matter      Matter?       @relation(fields: [matterId], references: [id])
+  matterId    Int?
+  owner       Person        @relation("TaskOwner", fields: [ownerId], references: [id])
+  ownerId     Int
+  assignees   TaskAssignee[]
+}
+
+model TaskAssignee {
+  id       Int    @id @default(autoincrement())
+  task     Task   @relation(fields: [taskId], references: [id])
+  taskId   Int
+  person   Person @relation(fields: [personId], references: [id])
+  personId Int
+
+  @@unique([taskId, personId])
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  email       String   @unique
+  firstName   String
+  lastName    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  person      Person?  @relation(fields: [personId], references: [id])
+  personId    Int?     @unique
+}
+
+model Estimate {
+  id          Int      @id @default(autoincrement())
+  description String
+  totalAmount Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  matter         Matter            @relation(fields: [matterId], references: [id])
+  matterId       Int
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  vendorAgreements VendorAgreement[]
+  invoices       Invoice[]
+}
+
+model VendorAgreement {
+  id            Int                        @id @default(autoincrement())
+  agreementText String
+  signedBy      VendorAgreementSignedBy
+  signedDate    DateTime?
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  // Relationships
+  matter         Matter       @relation(fields: [matterId], references: [id])
+  matterId       Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  estimate       Estimate?    @relation(fields: [estimateId], references: [id])
+  estimateId     Int?
+  invoices       Invoice[]
+}
+
+model Invoice {
+  id             Int           @id @default(autoincrement())
+  invoiceDate    DateTime
+  amount         Float
+  status         InvoiceStatus @default(RECEIVED)
+  approved       Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relationships
+  matter           Matter           @relation(fields: [matterId], references: [id])
+  matterId         Int
+  organization     Organization     @relation(fields: [organizationId], references: [id])
+  organizationId   Int
+  estimate         Estimate?        @relation(fields: [estimateId], references: [id])
+  estimateId       Int?
+  vendorAgreement  VendorAgreement? @relation(fields: [vendorAgreementId], references: [id])
+  vendorAgreementId Int?
+}
+
+model Collection {
+  id              Int               @id @default(autoincrement())
+  type            CollectionType
+  platform        EmailPlatform?
+  status          CollectionStatus  @default(DISCUSSING)
+  scheduledDate   DateTime?
+  completedDate   DateTime?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relationships
+  matter          Matter            @relation(fields: [matterId], references: [id])
+  matterId        Int
+  organization    Organization?     @relation(fields: [organizationId], references: [id])
+  organizationId  Int?
+  custodians      CollectionCustodian[]
+}
+
+model Custodian {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String?
+  department      String?
+  title           String?
+  streetAddress   String?
+  city            String?
+  state           String?
+  zipCode         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  organization    Organization          @relation(fields: [organizationId], references: [id])
+  organizationId  Int
+  matter          Matter                @relation(fields: [matterId], references: [id])
+  matterId        Int
+  collections     CollectionCustodian[]
+}
+
+model CollectionCustodian {
+  id           Int        @id @default(autoincrement())
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  collectionId Int
+  custodian    Custodian  @relation(fields: [custodianId], references: [id])
+  custodianId  Int
+
+  @@unique([collectionId, custodianId])
+}
+
+model Workspace {
+  id              Int           @id @default(autoincrement())
+  relativityUrl   String
+  type            WorkspaceType
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relationships
+  matter          Matter        @relation(fields: [matterId], references: [id])
+  matterId        Int
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  organizationId  Int
+}

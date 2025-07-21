@@ -18,9 +18,13 @@ cd client
 npm install
 echo "Client dependencies installed"
 
-# Build the client
-echo "Building client with Vite..."
-npm run build
+# Check if vite is available
+echo "Checking Vite installation..."
+npx vite --version || echo "Vite not found via npx"
+
+# Build the client using npx to ensure vite is found
+echo "Building client with Vite using npx..."
+npx vite build
 echo "Client build completed"
 
 # Go back to root and install server dependencies

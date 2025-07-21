@@ -16,8 +16,12 @@ npm install
 echo "Setting up database for production..."
 cd server && npm run db:setup
 
-# Run database migrations
-echo "Running database migrations..."
+# Generate Prisma client
+echo "Generating Prisma client..."
+npx prisma generate
+
+# Run database setup (uses db push for PostgreSQL)
+echo "Setting up database schema..."
 npm run db:migrate
 
 # Build the client

@@ -76,7 +76,7 @@ const People = () => {
     try {
       const url = editingPerson 
         ? `${API_BASE_URL}/people/${editingPerson.id}`
-        : '${API_BASE_URL}/people';
+        : `${API_BASE_URL}/people`;
       
       const method = editingPerson ? 'PUT' : 'POST';
       

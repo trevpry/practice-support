@@ -7,7 +7,7 @@ const ApiTest = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const API_BASE_URL = '${API_BASE_URL}';
+    const API_BASE_URL = `${API_BASE_URL}`;
 
     const fetchUsers = async () => {
         setLoading(true);

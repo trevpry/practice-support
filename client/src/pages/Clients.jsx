@@ -71,7 +71,7 @@ const Clients = () => {
     try {
       const url = editingClient 
         ? `${API_BASE_URL}/clients/${editingClient.id}`
-        : '${API_BASE_URL}/clients';
+        : `${API_BASE_URL}/clients`;
       
       const method = editingClient ? 'PUT' : 'POST';
       

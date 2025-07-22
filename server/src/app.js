@@ -34,8 +34,13 @@ app.get('/health', (req, res) => {
 });
 
 // Catch-all handler: send back React's index.html file in production
+// Only for non-API routes
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
     res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 }

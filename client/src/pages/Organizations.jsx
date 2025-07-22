@@ -77,7 +77,7 @@ const Organizations = () => {
     try {
       const url = editingOrganization 
         ? `${API_BASE_URL}/organizations/${editingOrganization.id}` 
-        : '${API_BASE_URL}/organizations';
+        : `${API_BASE_URL}/organizations`;
       const method = editingOrganization ? 'PUT' : 'POST';
       
       const response = await fetch(url, {

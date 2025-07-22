@@ -178,7 +178,7 @@ const CreateCollection = () => {
         completedDate: formData.completedDate || null
       };
 
-      const response = await fetch('${API_BASE_URL}/collections', {
+      const response = await fetch(`${API_BASE_URL}/collections`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

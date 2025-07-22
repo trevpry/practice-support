@@ -83,7 +83,7 @@ const Matters = () => {
     try {
       const url = editingMatter 
         ? `${API_BASE_URL}/matters/${editingMatter.id}`
-        : '${API_BASE_URL}/matters';
+        : `${API_BASE_URL}/matters`;
       
       const method = editingMatter ? 'PUT' : 'POST';
       

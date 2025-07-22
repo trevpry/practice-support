@@ -97,7 +97,7 @@ const CreateCustodian = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('${API_BASE_URL}/custodians', {
+      const response = await fetch(`${API_BASE_URL}/custodians`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

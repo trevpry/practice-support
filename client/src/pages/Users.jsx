@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Button } from '../components/ui/button';
+import { API_BASE_URL } from '../config/api';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -22,7 +23,7 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch(`${API_BASE_URL}/users`);
       const data = await response.json();
       setUsers(data);
     } catch (error) {
@@ -34,7 +35,7 @@ const Users = () => {
 
   const fetchPeople = async () => {
     try {
-      const response = await fetch('/api/people');
+      const response = await fetch(`${API_BASE_URL}/people`);
       const data = await response.json();
       setPeople(data);
     } catch (error) {
@@ -46,7 +47,7 @@ const Users = () => {
     e.preventDefault();
     
     try {
-      const url = currentUser ? `/api/users/${currentUser.id}` : '/api/users';
+      const url = currentUser ? `${API_BASE_URL}/users/${currentUser.id}` : `${API_BASE_URL}/users`;
       const method = currentUser ? 'PUT' : 'POST';
       
       // Generate username from email (part before @) or from first/last name
@@ -96,7 +97,7 @@ const Users = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        const response = await fetch(`/api/users/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/users/${id}`, {
           method: 'DELETE'
         });
         

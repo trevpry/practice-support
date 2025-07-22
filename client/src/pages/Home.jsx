@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { Users, FileText, User, TrendingUp, CheckSquare, LayoutGrid, Database, Receipt } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 // Helper function to check if a task is overdue
 const isOverdue = (dueDate) => {
@@ -55,12 +56,12 @@ const Home = () => {
     const fetchStats = async () => {
       try {
         const [clientsResponse, mattersResponse, tasksResponse, userResponse, collectionsResponse, invoicesResponse] = await Promise.all([
-          fetch('/api/clients'),
-          fetch('/api/matters'),
-          fetch('/api/auth/current-user/tasks'),
-          fetch('/api/auth/current-user'),
-          fetch('/api/collections'),
-          fetch('/api/invoices')
+          fetch(`${API_BASE_URL}/clients`),
+          fetch(`${API_BASE_URL}/matters`),
+          fetch(`${API_BASE_URL}/auth/current-user/tasks`),
+          fetch(`${API_BASE_URL}/auth/current-user`),
+          fetch(`${API_BASE_URL}/collections`),
+          fetch(`${API_BASE_URL}/invoices`)
         ]);
 
         if (clientsResponse.ok && mattersResponse.ok && tasksResponse.ok && userResponse.ok && collectionsResponse.ok && invoicesResponse.ok) {

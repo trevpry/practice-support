@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { Plus, Calendar, User, FileText, AlertCircle, Clock } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -32,7 +33,7 @@ const Tasks = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/current-user');
+      const response = await fetch(`${API_BASE_URL}/auth/current-user`);
       const user = await response.json();
       setCurrentUser(user);
     } catch (error) {
@@ -43,7 +44,7 @@ const Tasks = () => {
   const fetchTasks = async () => {
     try {
       // Use current user's tasks endpoint instead of all tasks
-      const response = await fetch('/api/auth/current-user/tasks');
+      const response = await fetch(`${API_BASE_URL}/auth/current-user/tasks`);
       const data = await response.json();
       setTasks(data);
     } catch (error) {
@@ -55,7 +56,7 @@ const Tasks = () => {
 
   const fetchPeople = async () => {
     try {
-      const response = await fetch('/api/people');
+      const response = await fetch(`${API_BASE_URL}/people`);
       const data = await response.json();
       setPeople(data);
     } catch (error) {
@@ -65,7 +66,7 @@ const Tasks = () => {
 
   const fetchMatters = async () => {
     try {
-      const response = await fetch('/api/matters');
+      const response = await fetch(`${API_BASE_URL}/matters`);
       const data = await response.json();
       setMatters(data);
     } catch (error) {
@@ -94,8 +95,8 @@ const Tasks = () => {
     e.preventDefault();
     try {
       const url = editingTask 
-        ? `/api/tasks/${editingTask.id}`
-        : '/api/tasks';
+        ? `${API_BASE_URL}/tasks/${editingTask.id}`
+        : `${API_BASE_URL}/tasks`;
       
       const method = editingTask ? 'PUT' : 'POST';
       
@@ -147,7 +148,7 @@ const Tasks = () => {
   const handleDelete = async (taskId) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
-        const response = await fetch(`/api/tasks/${taskId}`, {
+        const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
           method: 'DELETE',
         });
 

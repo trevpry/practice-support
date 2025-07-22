@@ -292,6 +292,47 @@ When a person is assigned to a matter, they are automatically linked to the clie
 - Detail pages with edit and delete functionality
 - Breadcrumb navigation and intuitive linking
 
+## Local Network Hosting
+
+### Quick Setup for Local Network Access
+
+To host this application on your local network so other devices can access it:
+
+1. **Find your local IP address:**
+   ```bash
+   # Windows
+   ipconfig
+   # Look for "IPv4 Address" (e.g., 192.168.1.100)
+   
+   # Mac/Linux
+   ifconfig
+   # Look for "inet" address (e.g., 192.168.1.100)
+   ```
+
+2. **Start the application:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Configure network access:**
+   - Frontend will be available at: `http://YOUR_IP:3000`
+   - Backend API at: `http://YOUR_IP:5001`
+   - Example: `http://192.168.1.100:3000`
+
+4. **Allow firewall access (if prompted):**
+   - Windows: Allow Node.js through Windows Firewall
+   - Mac: System Preferences → Security & Privacy → Firewall → Allow incoming connections
+
+5. **Access from other devices:**
+   - Connect devices to the same WiFi network
+   - Open browser and navigate to `http://YOUR_IP:3000`
+   - Replace `YOUR_IP` with your actual IP address
+
+### Notes:
+- Devices must be on the same network (WiFi/LAN)
+- The hosting computer must remain on and running the application
+- For permanent hosting, consider using a dedicated server or cloud deployment
+
 ## Development
 
 ### Database Changes

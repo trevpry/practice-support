@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  app.use(express.static(path.join(__dirname, '../public')));
 }
 
 // Routes
@@ -34,7 +34,7 @@ app.get('/health', (req, res) => {
 // Catch-all handler: send back React's index.html file in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 }
 

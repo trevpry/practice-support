@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { Button } from '../components/ui/button';
 import { Plus, Building2, Mail, Phone, Globe, MapPin, Edit, Trash2 } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Organizations = () => {
   const location = useLocation();
@@ -49,7 +50,7 @@ const Organizations = () => {
 
   const fetchOrganizations = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/organizations');
+      const response = await fetch(`${API_BASE_URL}/organizations`);
       if (!response.ok) throw new Error('Failed to fetch organizations');
       const data = await response.json();
       setOrganizations(data);
@@ -62,7 +63,7 @@ const Organizations = () => {
 
   const fetchOrganizationTypes = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/organizations/types');
+      const response = await fetch(`${API_BASE_URL}/organizations/types`);
       if (!response.ok) throw new Error('Failed to fetch organization types');
       const data = await response.json();
       setOrganizationTypes(data);
@@ -75,8 +76,8 @@ const Organizations = () => {
     e.preventDefault();
     try {
       const url = editingOrganization 
-        ? `http://localhost:5001/api/organizations/${editingOrganization.id}` 
-        : 'http://localhost:5001/api/organizations';
+        ? `${API_BASE_URL}/organizations/${editingOrganization.id}` 
+        : '${API_BASE_URL}/organizations';
       const method = editingOrganization ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
@@ -123,7 +124,7 @@ const Organizations = () => {
     if (!confirm('Are you sure you want to delete this organization?')) return;
     
     try {
-      const response = await fetch(`http://localhost:5001/api/organizations/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/organizations/${id}`, {
         method: 'DELETE',
       });
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const EditCustodian = () => {
   const [formData, setFormData] = useState({
@@ -31,9 +32,9 @@ const EditCustodian = () => {
   const fetchData = async () => {
     try {
       const [custodianRes, organizationsRes, mattersRes] = await Promise.all([
-        fetch(`http://localhost:5001/api/custodians/${id}`),
-        fetch('http://localhost:5001/api/organizations'),
-        fetch('http://localhost:5001/api/matters')
+        fetch(`${API_BASE_URL}/custodians/${id}`),
+        fetch(`${API_BASE_URL}/organizations`),
+        fetch(`${API_BASE_URL}/matters`)
       ]);
 
       if (!custodianRes.ok || !organizationsRes.ok || !mattersRes.ok) {
@@ -111,7 +112,7 @@ const EditCustodian = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`http://localhost:5001/api/custodians/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/custodians/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

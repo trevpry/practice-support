@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Trash2, DollarSign, Calendar, CheckCircle, XCircle, FileText, Building2, Briefcase, Receipt, FileSignature } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const InvoiceDetail = () => {
   const { id } = useParams();
@@ -16,7 +17,7 @@ const InvoiceDetail = () => {
 
   const fetchInvoice = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/invoices/${id}`);
+      const response = await fetch(`${API_BASE_URL}/invoices/${id}`);
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Invoice not found');
@@ -36,7 +37,7 @@ const InvoiceDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this invoice?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/invoices/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/invoices/${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const CreateCustodian = () => {
   const [formData, setFormData] = useState({
@@ -30,8 +31,8 @@ const CreateCustodian = () => {
   const fetchInitialData = async () => {
     try {
       const [orgsRes, mattersRes] = await Promise.all([
-        fetch('http://localhost:5001/api/organizations'),
-        fetch('http://localhost:5001/api/matters')
+        fetch(`${API_BASE_URL}/organizations`),
+        fetch(`${API_BASE_URL}/matters`)
       ]);
 
       if (!orgsRes.ok || !mattersRes.ok) {
@@ -96,7 +97,7 @@ const CreateCustodian = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5001/api/custodians', {
+      const response = await fetch('${API_BASE_URL}/custodians', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

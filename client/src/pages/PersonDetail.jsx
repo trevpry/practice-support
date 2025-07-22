@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { ArrowLeft, Edit, Trash2, User, Building, FileText, Mail, Phone, X, Plus } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const PersonDetail = () => {
   const { id } = useParams();
@@ -34,7 +35,7 @@ const PersonDetail = () => {
   useEffect(() => {
     const fetchPerson = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/people/${id}`);
+        const response = await fetch(`${API_BASE_URL}/people/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Person not found');
@@ -52,7 +53,7 @@ const PersonDetail = () => {
 
     const fetchCurrentUser = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/auth/current-user');
+        const response = await fetch(`${API_BASE_URL}/auth/current-user`);
         if (response.ok) {
           const userData = await response.json();
           setCurrentUser(userData);
@@ -72,7 +73,7 @@ const PersonDetail = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/people/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/people/${id}`, {
         method: 'DELETE',
       });
 
@@ -87,7 +88,7 @@ const PersonDetail = () => {
   // Fetch all matters for matter management
   const fetchAllMatters = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/matters');
+      const response = await fetch(`${API_BASE_URL}/matters`);
       if (!response.ok) throw new Error('Failed to fetch matters');
       const matters = await response.json();
       setAllMatters(matters);
@@ -118,7 +119,7 @@ const PersonDetail = () => {
   const saveMatterChanges = async () => {
     setMattersModalLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/api/people/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/people/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

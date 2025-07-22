@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 import { 
   Calendar, 
   User, 
@@ -41,7 +42,7 @@ const TaskDetail = () => {
 
   const fetchTask = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/tasks/${id}`);
+      const response = await fetch(`${API_BASE_URL}/tasks/${id}`);
       if (response.ok) {
         const data = await response.json();
         setTask(data);
@@ -57,7 +58,7 @@ const TaskDetail = () => {
 
   const fetchPeople = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/people');
+      const response = await fetch(`${API_BASE_URL}/people`);
       const data = await response.json();
       setPeople(data);
     } catch (error) {
@@ -67,7 +68,7 @@ const TaskDetail = () => {
 
   const fetchMatters = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/matters');
+      const response = await fetch(`${API_BASE_URL}/matters`);
       const data = await response.json();
       setMatters(data);
     } catch (error) {
@@ -109,7 +110,7 @@ const TaskDetail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:5001/api/tasks/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ const TaskDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/tasks/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
           method: 'DELETE',
         });
 

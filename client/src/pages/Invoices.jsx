@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Plus, DollarSign, FileText, Calendar, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -14,7 +15,7 @@ const Invoices = () => {
 
   const fetchInvoices = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/invoices');
+      const response = await fetch(`${API_BASE_URL}/invoices`);
       if (!response.ok) {
         throw new Error('Failed to fetch invoices');
       }
@@ -31,7 +32,7 @@ const Invoices = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this invoice?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/invoices/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/invoices/${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {

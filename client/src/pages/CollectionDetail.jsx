@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Building2, User, FileText, Calendar, CheckCircle, Clock, MessageSquare, AlertTriangle } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const CollectionDetail = () => {
   const { id } = useParams();
@@ -16,7 +17,7 @@ const CollectionDetail = () => {
 
   const fetchCollection = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/collections/${id}`);
+      const response = await fetch(`${API_BASE_URL}/collections/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch collection');
       }
@@ -32,7 +33,7 @@ const CollectionDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this collection?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/collections/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/collections/${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Plus, User, FileText, Users } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const Custodians = () => {
   const [custodians, setCustodians] = useState([]);
@@ -14,7 +15,7 @@ const Custodians = () => {
 
   const fetchCustodians = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/custodians');
+      const response = await fetch(`${API_BASE_URL}/custodians`);
       if (!response.ok) {
         throw new Error('Failed to fetch custodians');
       }
@@ -30,7 +31,7 @@ const Custodians = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this custodian?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/custodians/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/custodians/${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {

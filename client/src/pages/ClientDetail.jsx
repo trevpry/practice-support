@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { ArrowLeft, Edit, Trash2, FileText, User, Users } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const ClientDetail = () => {
   const { id } = useParams();
@@ -29,7 +30,7 @@ const ClientDetail = () => {
   useEffect(() => {
     const fetchClient = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/clients/${id}`);
+        const response = await fetch(`${API_BASE_URL}/clients/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Client not found');
@@ -54,7 +55,7 @@ const ClientDetail = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/clients/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/clients/${id}`, {
         method: 'DELETE',
       });
 

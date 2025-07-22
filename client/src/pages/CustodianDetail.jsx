@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Building2, User, Database, Calendar, CheckCircle, Mail } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const CustodianDetail = () => {
   const { id } = useParams();
@@ -16,7 +17,7 @@ const CustodianDetail = () => {
 
   const fetchCustodian = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/custodians/${id}`);
+      const response = await fetch(`${API_BASE_URL}/custodians/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch custodian');
       }
@@ -32,7 +33,7 @@ const CustodianDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this custodian? This will also delete all associated collections.')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/custodians/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/custodians/${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { ArrowLeft, Edit, Trash2, Building2, User, Mail, Phone, Globe, MapPin, X, Plus } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const OrganizationDetail = () => {
   const { id } = useParams();
@@ -18,7 +19,7 @@ const OrganizationDetail = () => {
   useEffect(() => {
     const fetchOrganization = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/organizations/${id}`);
+        const response = await fetch(`${API_BASE_URL}/organizations/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Organization not found');
@@ -43,7 +44,7 @@ const OrganizationDetail = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/organizations/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/organizations/${id}`, {
         method: 'DELETE',
       });
 
@@ -61,7 +62,7 @@ const OrganizationDetail = () => {
   // Fetch all people for people management
   const fetchAllPeople = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/people');
+      const response = await fetch(`${API_BASE_URL}/people`);
       if (!response.ok) throw new Error('Failed to fetch people');
       const people = await response.json();
       setAllPeople(people);
@@ -105,7 +106,7 @@ const OrganizationDetail = () => {
       for (const personId of peopleToAdd) {
         const person = allPeople.find(p => p.id === personId);
         if (person) {
-          await fetch(`http://localhost:5001/api/people/${personId}`, {
+          await fetch(`${API_BASE_URL}/people/${personId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ const OrganizationDetail = () => {
       for (const personId of peopleToRemove) {
         const person = allPeople.find(p => p.id === personId);
         if (person) {
-          await fetch(`http://localhost:5001/api/people/${personId}`, {
+          await fetch(`${API_BASE_URL}/people/${personId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ const OrganizationDetail = () => {
       }
 
       // Refresh organization data
-      const response = await fetch(`http://localhost:5001/api/organizations/${id}`);
+      const response = await fetch(`${API_BASE_URL}/organizations/${id}`);
       if (response.ok) {
         const updatedOrganization = await response.json();
         setOrganization(updatedOrganization);

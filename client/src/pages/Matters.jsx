@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { Plus, Edit, Trash2, FileText, Eye, DollarSign, Receipt, FileSignature, Users, Database } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Matters = () => {
   const location = useLocation();
@@ -40,8 +41,8 @@ const Matters = () => {
   const fetchData = async () => {
     try {
       const [mattersResponse, clientsResponse] = await Promise.all([
-        fetch('http://localhost:5001/api/matters'),
-        fetch('http://localhost:5001/api/clients')
+        fetch(`${API_BASE_URL}/matters`),
+        fetch(`${API_BASE_URL}/clients`)
       ]);
 
       if (!mattersResponse.ok || !clientsResponse.ok) {
@@ -81,8 +82,8 @@ const Matters = () => {
     e.preventDefault();
     try {
       const url = editingMatter 
-        ? `http://localhost:5001/api/matters/${editingMatter.id}`
-        : 'http://localhost:5001/api/matters';
+        ? `${API_BASE_URL}/matters/${editingMatter.id}`
+        : '${API_BASE_URL}/matters';
       
       const method = editingMatter ? 'PUT' : 'POST';
       
@@ -118,7 +119,7 @@ const Matters = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/matters/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/matters/${id}`, {
         method: 'DELETE',
       });
 

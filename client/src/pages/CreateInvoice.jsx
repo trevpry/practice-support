@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, DollarSign } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const CreateInvoice = () => {
   const navigate = useNavigate();
@@ -39,9 +40,9 @@ const CreateInvoice = () => {
   const fetchInitialData = async () => {
     try {
       const [mattersRes, vendorsRes, statusRes] = await Promise.all([
-        fetch('http://localhost:5001/api/matters'),
-        fetch('http://localhost:5001/api/organizations'),
-        fetch('http://localhost:5001/api/invoices/status-options')
+        fetch(`${API_BASE_URL}/matters`),
+        fetch(`${API_BASE_URL}/organizations`),
+        fetch(`${API_BASE_URL}/invoices/status-options`)
       ]);
 
       if (!mattersRes.ok || !vendorsRes.ok || !statusRes.ok) {
@@ -65,7 +66,7 @@ const CreateInvoice = () => {
 
   const fetchEstimates = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/estimates');
+      const response = await fetch(`${API_BASE_URL}/estimates`);
       if (!response.ok) {
         throw new Error('Failed to fetch estimates');
       }
@@ -85,7 +86,7 @@ const CreateInvoice = () => {
 
   const fetchVendorAgreements = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/vendor-agreements');
+      const response = await fetch(`${API_BASE_URL}/vendor-agreements`);
       if (!response.ok) {
         throw new Error('Failed to fetch vendor agreements');
       }
@@ -116,7 +117,7 @@ const CreateInvoice = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5001/api/invoices', {
+      const response = await fetch('${API_BASE_URL}/invoices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

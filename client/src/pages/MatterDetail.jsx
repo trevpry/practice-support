@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { ArrowLeft, Edit, Trash2, User, Users, Building, X, Plus, CheckSquare, Calendar, AlertCircle, DollarSign, FileText, Archive } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const MatterDetail = () => {
   const { id } = useParams();
@@ -54,7 +55,7 @@ const MatterDetail = () => {
 
     const fetchCollections = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/collections/matter/${id}`);
+        const response = await fetch(`${API_BASE_URL}/collections/matter/${id}`);
         if (response.ok) {
           const data = await response.json();
           setCollections(data);
@@ -66,7 +67,7 @@ const MatterDetail = () => {
 
     const fetchWorkspaces = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/workspaces/matter/${id}`);
+        const response = await fetch(`${API_BASE_URL}/workspaces/matter/${id}`);
         if (response.ok) {
           const data = await response.json();
           setWorkspaces(data);
@@ -78,7 +79,7 @@ const MatterDetail = () => {
 
     const fetchEstimates = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/estimates/matter/${id}`);
+        const response = await fetch(`${API_BASE_URL}/estimates/matter/${id}`);
         if (response.ok) {
           const data = await response.json();
           setEstimates(data);
@@ -90,7 +91,7 @@ const MatterDetail = () => {
 
     const fetchVendorAgreements = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/vendor-agreements/matter/${id}`);
+        const response = await fetch(`${API_BASE_URL}/vendor-agreements/matter/${id}`);
         if (response.ok) {
           const data = await response.json();
           setVendorAgreements(data);
@@ -102,7 +103,7 @@ const MatterDetail = () => {
 
     const fetchInvoices = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/invoices/matter/${id}`);
+        const response = await fetch(`${API_BASE_URL}/invoices/matter/${id}`);
         if (response.ok) {
           const data = await response.json();
           setInvoices(data);

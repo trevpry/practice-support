@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import Layout from '../components/Layout';
+import { API_BASE_URL } from '../config/api';
 
 const CreateCollection = () => {
   const [formData, setFormData] = useState({
@@ -41,11 +42,11 @@ const CreateCollection = () => {
   const fetchInitialData = async () => {
     try {
       const [mattersRes, orgsRes, statusRes, typeRes, platformRes] = await Promise.all([
-        fetch('http://localhost:5001/api/matters'),
-        fetch('http://localhost:5001/api/organizations'),
-        fetch('http://localhost:5001/api/collections/status-options'),
-        fetch('http://localhost:5001/api/collections/type-options'),
-        fetch('http://localhost:5001/api/collections/platform-options')
+        fetch(`${API_BASE_URL}/matters`),
+        fetch(`${API_BASE_URL}/organizations`),
+        fetch(`${API_BASE_URL}/collections/status-options`),
+        fetch(`${API_BASE_URL}/collections/type-options`),
+        fetch(`${API_BASE_URL}/collections/platform-options`)
       ]);
 
       if (!mattersRes.ok || !orgsRes.ok || !statusRes.ok || !typeRes.ok || !platformRes.ok) {
@@ -74,7 +75,7 @@ const CreateCollection = () => {
 
   const fetchCustodiansByMatter = async (matterId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/custodians?matterId=${matterId}`);
+      const response = await fetch(`${API_BASE_URL}/custodians?matterId=${matterId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch custodians');
       }
@@ -177,7 +178,7 @@ const CreateCollection = () => {
         completedDate: formData.completedDate || null
       };
 
-      const response = await fetch('http://localhost:5001/api/collections', {
+      const response = await fetch('${API_BASE_URL}/collections', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

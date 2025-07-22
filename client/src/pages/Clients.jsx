@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { Plus, Edit, Trash2, Users, Eye } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Clients = () => {
   const location = useLocation();
@@ -26,8 +27,8 @@ const Clients = () => {
   const fetchData = async () => {
     try {
       const [clientsResponse, peopleResponse] = await Promise.all([
-        fetch('http://localhost:5001/api/clients'),
-        fetch('http://localhost:5001/api/people')
+        fetch(`${API_BASE_URL}/clients`),
+        fetch(`${API_BASE_URL}/people`)
       ]);
       
       if (!clientsResponse.ok || !peopleResponse.ok) {
@@ -69,8 +70,8 @@ const Clients = () => {
     e.preventDefault();
     try {
       const url = editingClient 
-        ? `http://localhost:5001/api/clients/${editingClient.id}`
-        : 'http://localhost:5001/api/clients';
+        ? `${API_BASE_URL}/clients/${editingClient.id}`
+        : '${API_BASE_URL}/clients';
       
       const method = editingClient ? 'PUT' : 'POST';
       
@@ -108,7 +109,7 @@ const Clients = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/clients/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/clients/${id}`, {
         method: 'DELETE',
       });
 

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
 import { Plus, Edit, Trash2, User, Eye } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const People = () => {
   const location = useLocation();
@@ -31,7 +32,7 @@ const People = () => {
   // Fetch people
   const fetchPeople = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/people');
+      const response = await fetch(`${API_BASE_URL}/people`);
       if (!response.ok) throw new Error('Failed to fetch people');
       const data = await response.json();
       setPeople(data);
@@ -45,7 +46,7 @@ const People = () => {
   // Fetch organizations
   const fetchOrganizations = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/organizations');
+      const response = await fetch(`${API_BASE_URL}/organizations`);
       if (!response.ok) throw new Error('Failed to fetch organizations');
       const data = await response.json();
       setOrganizations(data);
@@ -74,8 +75,8 @@ const People = () => {
     e.preventDefault();
     try {
       const url = editingPerson 
-        ? `http://localhost:5001/api/people/${editingPerson.id}`
-        : 'http://localhost:5001/api/people';
+        ? `${API_BASE_URL}/people/${editingPerson.id}`
+        : '${API_BASE_URL}/people';
       
       const method = editingPerson ? 'PUT' : 'POST';
       
@@ -112,7 +113,7 @@ const People = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/people/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/people/${id}`, {
         method: 'DELETE',
       });
 

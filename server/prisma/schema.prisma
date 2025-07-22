@@ -112,6 +112,7 @@ model Organization {
   collections     Collection[]
   custodians      Custodian[]
   workspaces      Workspace[]
+  contractReviews ContractReview[]
 }
 
 model Person {
@@ -142,6 +143,7 @@ model Person {
   clientProjectManager Client[]      @relation("ClientProjectManager")
   matterPersons       MatterPerson[]
   user                User?          // Optional relationship with User
+  contractReviews     ContractReview[] // Contract reviews managed by this person
 }
 
 model Client {
@@ -179,6 +181,7 @@ model Matter {
   collections  Collection[]
   workspaces   Workspace[]
   custodians   Custodian[]
+  contractReviews ContractReview[]
 }
 
 model MatterPerson {
@@ -231,12 +234,14 @@ model Estimate {
   totalCost       Float        // Dollar amount for total estimated cost
   matterId        Int          // Required matter assignment
   organizationId  Int          // Required vendor organization
+  contractReviewId Int?        // Optional contract review assignment
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   
   // Relationships
   matter          Matter       @relation(fields: [matterId], references: [id], onDelete: Cascade)
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contractReview  ContractReview? @relation(fields: [contractReviewId], references: [id], onDelete: SetNull)
   vendorAgreements VendorAgreement[] // Optional relationship with vendor agreements
   invoices        Invoice[]    // Relationship with invoices
 }
@@ -248,6 +253,7 @@ model VendorAgreement {
   matterId        Int          // Required matter assignment
   organizationId  Int          // Required vendor organization
   estimateId      Int?         // Optional estimate connection
+  contractReviewId Int?        // Optional contract review assignment
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   
@@ -255,6 +261,7 @@ model VendorAgreement {
   matter          Matter       @relation(fields: [matterId], references: [id], onDelete: Cascade)
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   estimate        Estimate?    @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  contractReview  ContractReview? @relation(fields: [contractReviewId], references: [id], onDelete: SetNull)
   invoices        Invoice[]    // Invoices linked to this agreement
 }
 
@@ -268,6 +275,7 @@ model Invoice {
   organizationId      Int               // Required vendor organization
   estimateId          Int?              // Optional estimate connection
   vendorAgreementId   Int?              // Optional vendor agreement connection
+  contractReviewId    Int?              // Optional contract review assignment
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   
@@ -276,6 +284,7 @@ model Invoice {
   organization        Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   estimate            Estimate?         @relation(fields: [estimateId], references: [id], onDelete: SetNull)
   vendorAgreement     VendorAgreement?  @relation(fields: [vendorAgreementId], references: [id], onDelete: SetNull)
+  contractReview      ContractReview?   @relation(fields: [contractReviewId], references: [id], onDelete: SetNull)
 }
 
 model Custodian {
@@ -343,4 +352,29 @@ model Workspace {
   // Relationships
   matter          Matter        @relation(fields: [matterId], references: [id], onDelete: Cascade)
   organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contractReviews ContractReview[] // Contract reviews using this workspace
+}
+
+model ContractReview {
+  id                    Int               @id @default(autoincrement())
+  reviewDocumentCount   Int               // Number of documents in review
+  matterId              Int               // Required matter assignment
+  vendorOrganizationId  Int               // Required vendor organization
+  reviewManagerId       Int?              // Optional review manager (person from vendor)
+  workspaceId           Int               // Required workspace assignment
+  status                String            @default("Discussing") // Status: Discussing, In Progress, Completed
+  startDate             DateTime?         // Optional start date
+  endDate               DateTime?         // Optional end date
+  batchTitle            String?           // Optional title for this contract review batch
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relationships
+  matter                Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  vendorOrganization    Organization      @relation(fields: [vendorOrganizationId], references: [id], onDelete: Cascade)
+  reviewManager         Person?           @relation(fields: [reviewManagerId], references: [id], onDelete: SetNull)
+  workspace             Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  estimates             Estimate[]        // Optional estimates
+  vendorAgreements      VendorAgreement[] // Optional agreements
+  invoices              Invoice[]         // Optional invoices
 }

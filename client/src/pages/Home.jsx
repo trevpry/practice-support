@@ -40,14 +40,16 @@ const Home = () => {
     totalClients: 0,
     totalMatters: 0,
     totalTasks: 0,
+    totalContractReviews: 0,
     activeTasks: 0,
     overdueTasks: 0,
     totalCollections: 0,
     totalInvoices: 0,
-    matterStatusCounts: {},
     recentClients: [],
     recentMatters: [],
-    recentTasks: []
+    recentTasks: [],
+    recentContractReviews: [],
+    matterStatusCounts: {}
   });
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,23 +57,25 @@ const Home = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [clientsResponse, mattersResponse, tasksResponse, userResponse, collectionsResponse, invoicesResponse] = await Promise.all([
+        const [clientsResponse, mattersResponse, tasksResponse, userResponse, collectionsResponse, invoicesResponse, contractReviewsResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/clients`),
           fetch(`${API_BASE_URL}/matters`),
           fetch(`${API_BASE_URL}/auth/current-user/tasks`),
           fetch(`${API_BASE_URL}/auth/current-user`),
           fetch(`${API_BASE_URL}/collections`),
-          fetch(`${API_BASE_URL}/invoices`)
+          fetch(`${API_BASE_URL}/invoices`),
+          fetch(`${API_BASE_URL}/contract-reviews`)
         ]);
 
-        if (clientsResponse.ok && mattersResponse.ok && tasksResponse.ok && userResponse.ok && collectionsResponse.ok && invoicesResponse.ok) {
-          const [allClients, allMatters, tasks, user, collections, invoices] = await Promise.all([
+        if (clientsResponse.ok && mattersResponse.ok && tasksResponse.ok && userResponse.ok && collectionsResponse.ok && invoicesResponse.ok && contractReviewsResponse.ok) {
+          const [allClients, allMatters, tasks, user, collections, invoices, contractReviews] = await Promise.all([
             clientsResponse.json(),
             mattersResponse.json(),
             tasksResponse.json(),
             userResponse.json(),
             collectionsResponse.json(),
-            invoicesResponse.json()
+            invoicesResponse.json(),
+            contractReviewsResponse.json()
           ]);
 
           setCurrentUser(user);
@@ -79,6 +83,7 @@ const Home = () => {
           // Filter clients and matters based on current user's linked person
           let filteredClients = allClients;
           let filteredMatters = allMatters;
+          let filteredContractReviews = contractReviews;
 
           if (user && user.person) {
             const personId = user.person.id;
@@ -94,6 +99,22 @@ const Home = () => {
             filteredMatters = allMatters.filter(matter => 
               matter.people && matter.people.some(mp => mp.person && mp.person.id === personId)
             );
+
+            // Filter contract reviews for matters where the user is assigned and review is not completed
+            filteredContractReviews = contractReviews.filter(review => {
+              // Check if review is not completed
+              if (review.status === 'Completed') return false;
+              
+              // Check if the matter has the current user assigned to it
+              const matter = allMatters.find(m => m.id === review.matterId);
+              if (!matter) return false;
+              
+              // Check if the current user's person is assigned to this matter
+              return matter.people && matter.people.some(mp => mp.person && mp.person.id === personId);
+            });
+          } else {
+            // No user context, show recent contract reviews (limited)
+            filteredContractReviews = contractReviews.filter(review => review.status !== 'Completed').slice(0, 5);
           }
 
           const activeTasks = tasks.filter(task => task.status !== 'COMPLETED').length;
@@ -128,10 +149,12 @@ const Home = () => {
             overdueTasks,
             totalCollections: activeCollections,
             totalInvoices: pendingInvoices,
+            totalContractReviews: filteredContractReviews.length,
             matterStatusCounts,
             recentClients: filteredClients.slice(-5).reverse(),
             recentMatters: filteredMatters.slice(-5).reverse(),
-            recentTasks: tasks.slice(-5).reverse()
+            recentTasks: tasks.slice(-5).reverse(),
+            recentContractReviews: filteredContractReviews.slice(-5).reverse()
           });
         }
       } catch (error) {
@@ -179,7 +202,7 @@ const Home = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
@@ -211,6 +234,18 @@ const Home = () => {
                 <p className="text-2xl font-bold text-gray-900">{stats.totalTasks}</p>
                 <p className="text-gray-600">
                   {currentUser && currentUser.person ? "My Tasks" : "Total Tasks"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">{stats.totalContractReviews}</p>
+                <p className="text-gray-600">
+                  {currentUser && currentUser.person ? "My Contract Reviews" : "Total Contract Reviews"}
                 </p>
               </div>
             </div>
@@ -290,7 +325,7 @@ const Home = () => {
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <Link to="/clients">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 h-12">
                 <Users className="w-5 h-5 mr-2" />
@@ -325,7 +360,7 @@ const Home = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Recent Clients */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -453,6 +488,62 @@ const Home = () => {
                             {task.matter.client.clientName} - {task.matter.matterName}
                           </Link>
                         </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Recent Contract Reviews */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {currentUser && currentUser.person ? "My Contract Reviews" : "Recent Contract Reviews"}
+            </h2>
+            {stats.recentContractReviews.length === 0 ? (
+              <p className="text-gray-500">
+                {currentUser && currentUser.person ? "No contract reviews for your matters yet" : "No contract reviews yet"}
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {stats.recentContractReviews.map((review) => (
+                  <li key={review.id} className="p-3 bg-gray-50 rounded-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <Link 
+                        to={`/contract-reviews/${review.id}`}
+                        className="font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {review.batchTitle || `Contract Review #${review.id}`}
+                      </Link>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        review.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                        review.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {review.status || 'Discussing'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {review.matter && (
+                        <div>
+                          <Link 
+                            to={`/matters/${review.matter.id}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {review.matter.client?.clientName || 'Unknown Client'} - {review.matter.matterName}
+                          </Link>
+                        </div>
+                      )}
+                      {review.vendorOrganization && (
+                        <div className="mt-1">
+                          Vendor: {review.vendorOrganization.name}
+                        </div>
+                      )}
+                      {review.reviewDocumentCount && (
+                        <div className="mt-1">
+                          {review.reviewDocumentCount.toLocaleString()} documents
+                        </div>
                       )}
                     </div>
                   </li>

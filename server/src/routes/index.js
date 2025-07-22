@@ -129,6 +129,10 @@ router.use('/collections', collectionRoutes);
 // Workspace routes
 router.use('/workspaces', workspaceRoutes);
 
+// Contract Review routes
+const contractReviewRoutes = require('./contractReviews');
+router.use('/contract-reviews', contractReviewRoutes);
+
 // Health check route
 router.get('/health', (req, res) => {
   res.json({ message: 'Practice Support API is working!' });

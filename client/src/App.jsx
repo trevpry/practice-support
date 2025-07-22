@@ -27,6 +27,9 @@ import CreateCollection from './pages/CreateCollection';
 import EditCollection from './pages/EditCollection';
 import CreateWorkspace from './pages/CreateWorkspace';
 import EditWorkspace from './pages/EditWorkspace';
+import ContractReviews from './pages/ContractReviews';
+import ContractReviewDetails from './pages/ContractReviewDetails';
+import EditContractReview from './pages/EditContractReview';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Users from './pages/Users';
@@ -65,6 +68,9 @@ const App = () => {
         <Route path="/collections/:id/edit" element={<EditCollection />} />
         <Route path="/workspaces/create" element={<CreateWorkspace />} />
         <Route path="/workspaces/:id/edit" element={<EditWorkspace />} />
+        <Route path="/contract-reviews" element={<ContractReviews />} />
+        <Route path="/contract-reviews/:id" element={<ContractReviewDetails />} />
+        <Route path="/contract-reviews/edit/:id" element={<EditContractReview />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/users" element={<Users />} />

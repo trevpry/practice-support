@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Plus, Edit, Trash2, Users, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Eye, Search } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const Clients = () => {
@@ -15,6 +15,7 @@ const Clients = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     clientName: '',
     clientNumber: '',
@@ -22,6 +23,29 @@ const Clients = () => {
     paralegalId: '',
     projectManagerId: ''
   });
+
+  // Filter clients based on search term
+  const filteredClients = clients.filter(client => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      client.clientName.toLowerCase().includes(searchLower) ||
+      client.clientNumber.toLowerCase().includes(searchLower) ||
+      (client.attorney && `${client.attorney.firstName} ${client.attorney.lastName}`.toLowerCase().includes(searchLower)) ||
+      (client.paralegal && `${client.paralegal.firstName} ${client.paralegal.lastName}`.toLowerCase().includes(searchLower)) ||
+      (client.projectManager && `${client.projectManager.firstName} ${client.projectManager.lastName}`.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Calculate client assignment counts
+  const clientStats = {
+    withAttorney: clients.filter(client => client.attorney).length,
+    withParalegal: clients.filter(client => client.paralegal).length,
+    withProjectManager: clients.filter(client => client.projectManager).length,
+    withoutAssignments: clients.filter(client => !client.attorney && !client.paralegal && !client.projectManager).length,
+    fullyAssigned: clients.filter(client => client.attorney && client.paralegal && client.projectManager).length
+  };
 
   // Fetch clients and people
   const fetchData = async () => {
@@ -150,7 +174,9 @@ const Clients = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Clients</h1>
-            <p className="text-gray-600">Manage your law firm's clients</p>
+            <p className="text-gray-600">
+              Manage your law firm's clients • {clients.length} total {clients.length === 1 ? 'client' : 'clients'}
+            </p>
           </div>
           <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-2" />
@@ -158,16 +184,89 @@ const Clients = () => {
           </Button>
         </div>
 
-        {clients.length === 0 ? (
+        {/* Client Assignment Status */}
+        {clients.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Client Assignment Status</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  With Attorney
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {clientStats.withAttorney}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  With Paralegal
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {clientStats.withParalegal}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  With PM
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {clientStats.withProjectManager}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  Fully Assigned
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {clientStats.fullyAssigned}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                  Unassigned
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {clientStats.withoutAssignments}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Search Clients</h2>
+            <span className="text-sm text-gray-500">
+              {searchTerm ? `${filteredClients.length} of ${clients.length} clients` : `${clients.length} total clients`}
+            </span>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search clients by name, number, or assigned staff..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {filteredClients.length === 0 ? (
           <div className="text-center py-12">
             <Users className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No clients</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by creating a new client.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              {searchTerm ? 'No clients found' : 'No clients'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new client.'}
+            </p>
           </div>
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
-              {clients.map((client) => (
+              {filteredClients.map((client) => (
                 <li key={client.id}>
                   <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                     <div className="flex-1">

@@ -5,14 +5,22 @@ A comprehensive web application for law firm ediscovery and litigation support t
 ## Features
 
 - **Client Management**: Track law firm clients with 7-digit client numbers
+  - **Assignment Analytics**: Visual breakdown of client assignments by attorney, paralegal, and project manager
+  - **Search Functionality**: Comprehensive search across client names, numbers, and assigned staff
 - **Matter Management**: Organize matters with 6-digit matter numbers, linked to clients
   - **Matter Status Tracking**: Track matter progress through workflow stages: Collection, Culling, Review, Production, Inactive
   - **Status Visualization**: Color-coded status badges for quick identification
+  - **Status Analytics**: Visual status breakdown with counts for each workflow stage on matters page
+  - **Search Functionality**: Comprehensive search across matter names, numbers, clients, and status
   - **Kanban Board**: Drag-and-drop interface for visual matter status management
 - **People Management**: Manage attorneys, paralegals, vendors, and project managers
+  - **Type Analytics**: Visual breakdown of people by type (Attorney, Paralegal, Vendor, Project Manager)
+  - **Search Functionality**: Comprehensive search across names, email, phone, type, and organization
   - **Organization Linking**: Link people to organizations with organizational hierarchy and contact management
 - **Organization Management**: Track organizations that people are affiliated with
   - **Organization Types**: Current Law Firm, Co-Counsel, Opposing Counsel, Vendor, Third Party
+  - **Type Analytics**: Visual breakdown of organizations by type with color-coded statistics
+  - **Search Functionality**: Comprehensive search across names, types, contact information, and location
   - **Contact Information**: Full contact details including address and website
   - **People Relationships**: View and manage people linked to each organization
 - **Estimate Management**: Track vendor estimates for matters
@@ -36,6 +44,31 @@ A comprehensive web application for law firm ediscovery and litigation support t
   - **Status Management**: Track invoice workflow: Received, Submitted, Question, Paid
   - **Approval System**: Mark invoices as approved or pending approval
   - **Comprehensive Views**: View invoices by matter and vendor
+- **Contract Review Management**: Track contract review projects and document batches
+  - **Matter-Centric Workflow**: Contract reviews are tied to specific matters and workspaces
+  - **Vendor Organization Tracking**: Link contract reviews to vendor organizations
+  - **Review Manager Assignment**: Assign review managers to oversee contract review projects
+  - **Document Count Tracking**: Track the number of documents in each review batch
+  - **Status Management**: Track review status: Discussing, In Progress, Completed
+  - **Status Analytics**: Visual breakdown of contract reviews by status and linked items
+  - **Search Functionality**: Comprehensive search across titles, status, matters, vendors, managers, and workspaces
+  - **Timeline Management**: Set start and end dates for review projects
+  - **Linked Item Integration**: Link estimates, vendor agreements, and invoices to contract reviews
+  - **Smart Filtering**: Linked items are filtered by matter and organization for relevant selection
+  - **Detail Views**: Comprehensive detail pages with linked item summaries and quick stats
+  - **Clickable Navigation**: Contract review titles link to detailed information pages
+  - **Clickable Linked Items**: Estimates, agreements, and invoices link to their respective detail pages
+  - **Dashboard Integration**: "My Contract Reviews" section shows user's non-completed reviews for assigned matters
+- **Custodian Management**: Track custodians for data collection projects
+  - **Personal Information Tracking**: Store custodian names, emails, departments, and titles
+  - **Matter Integration**: Link custodians to specific matters for organized data collection
+  - **Information Analytics**: Visual breakdown of custodians by available information completeness
+  - **Search Functionality**: Comprehensive search across names, emails, departments, titles, and matters
+- **Collection Management**: Manage data collection workflows and tracking
+  - **Status Tracking**: Track collection progress through multiple workflow stages
+  - **Status Analytics**: Visual breakdown of collections by status (Discussing, Scheduled, In Progress, Completed)
+  - **Search Functionality**: Comprehensive search across collection names, descriptions, status, custodians, and matters
+  - **Custodian Integration**: Link collections to specific custodians for organized tracking
 - **Task Management**: Create and assign tasks with priorities, due dates, and status tracking
 - **User Management**: Create user accounts linked to people for personalized dashboards
 - **Relationship Tracking**: 
@@ -48,9 +81,10 @@ A comprehensive web application for law firm ediscovery and litigation support t
   - **Matter Status Display**: Matter status prominently shown at the top of matter detail pages with color-coded badges
   - **Consistent Status Badges**: Matter status badges displayed across all pages including client details and person assignments
 - **Team Management**: Modal interfaces for managing matter teams and person assignments
-- **Personalized Dashboards**: User-specific filtering showing only clients, matters, and tasks relevant to the current user
+- **Personalized Dashboards**: User-specific filtering showing only clients, matters, tasks, and contract reviews relevant to the current user
 - **Streamlined Interface**: Dashboard shows user-specific data without administrative clutter
 - **Contextual Data**: All dashboard sections filter based on user's person assignments and relationships
+- **Contract Review Dashboard**: Shows active contract reviews for matters where user is assigned, with status tracking and quick navigation
 
 ## Tech Stack
 
@@ -183,6 +217,13 @@ This will start both the backend server (port 5001) and frontend development ser
 - `PUT /api/invoices/:id` - Update invoice
 - `DELETE /api/invoices/:id` - Delete invoice
 
+### Contract Reviews
+- `GET /api/contract-reviews` - Get all contract reviews
+- `GET /api/contract-reviews/:id` - Get contract review by ID
+- `POST /api/contract-reviews` - Create new contract review
+- `PUT /api/contract-reviews/:id` - Update contract review
+- `DELETE /api/contract-reviews/:id` - Delete contract review
+
 ### Tasks
 - `GET /api/tasks` - Get all tasks
 - `GET /api/tasks/:id` - Get task by ID
@@ -211,6 +252,7 @@ This will start both the backend server (port 5001) and frontend development ser
 - **Estimate**: Vendor cost estimates for matters
 - **VendorAgreement**: Vendor contracts and agreements for matters
 - **Invoice**: Vendor invoices for matters with approval and status tracking
+- **ContractReview**: Contract review projects and document batches for matters
 - **Task**: Work items with priorities, due dates, and status tracking
 - **User**: User accounts with optional person linking for personalized views
 - **MatterPerson**: Junction table for many-to-many matter-person relationships
@@ -224,13 +266,20 @@ This will start both the backend server (port 5001) and frontend development ser
 - Matter → Estimate (one-to-many)
 - Matter → VendorAgreement (one-to-many)
 - Matter → Invoice (one-to-many)
+- Matter → ContractReview (one-to-many)
 - Organization → Estimate (one-to-many, vendors provide estimates)
 - Organization → VendorAgreement (one-to-many, vendors provide agreements)
 - Organization → Invoice (one-to-many, vendors provide invoices)
+- Organization → ContractReview (one-to-many, vendor organizations for reviews)
 - Estimate → VendorAgreement (one-to-many, optional linking)
 - Estimate → Invoice (one-to-many, optional linking)
+- Estimate → ContractReview (many-to-many, linking estimates to reviews)
+- VendorAgreement → ContractReview (many-to-many, linking agreements to reviews)
+- Invoice → ContractReview (many-to-many, linking invoices to reviews)
 - Person → Task (one-to-many as owner, many-to-many as assignees)
+- Person → ContractReview (one-to-many as review manager)
 - User → Person (optional one-to-one for personalized filtering)
+- Workspace → ContractReview (one-to-many, workspaces host reviews)
 
 ## Features in Detail
 

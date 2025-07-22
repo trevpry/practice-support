@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import Layout from '../components/Layout';
-import { Plus, Edit, Trash2, User, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, User, Eye, Search } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const People = () => {
@@ -13,6 +13,7 @@ const People = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -28,6 +29,32 @@ const People = () => {
     { value: 'VENDOR', label: 'Vendor' },
     { value: 'PROJECT_MANAGER', label: 'Project Manager' }
   ];
+
+  // Filter people based on search term
+  const filteredPeople = people.filter(person => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const personTypeLabel = personTypes.find(pt => pt.value === person.type)?.label || person.type;
+    
+    return (
+      person.firstName.toLowerCase().includes(searchLower) ||
+      person.lastName.toLowerCase().includes(searchLower) ||
+      person.email.toLowerCase().includes(searchLower) ||
+      (person.phone && person.phone.toLowerCase().includes(searchLower)) ||
+      personTypeLabel.toLowerCase().includes(searchLower) ||
+      (person.organization && person.organization.name.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Calculate people type counts
+  const peopleStats = {
+    attorneys: people.filter(person => person.type === 'ATTORNEY').length,
+    paralegals: people.filter(person => person.type === 'PARALEGAL').length,
+    vendors: people.filter(person => person.type === 'VENDOR').length,
+    projectManagers: people.filter(person => person.type === 'PROJECT_MANAGER').length,
+    withOrganization: people.filter(person => person.organization).length
+  };
 
   // Fetch people
   const fetchPeople = async () => {
@@ -167,7 +194,9 @@ const People = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">People</h1>
-            <p className="text-gray-600">Manage attorneys, paralegals, vendors, and project managers</p>
+            <p className="text-gray-600">
+              Manage attorneys, paralegals, vendors, and project managers • {people.length} total {people.length === 1 ? 'person' : 'people'}
+            </p>
           </div>
           <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-2" />
@@ -175,16 +204,89 @@ const People = () => {
           </Button>
         </div>
 
-        {people.length === 0 ? (
+        {/* People Type Breakdown */}
+        {people.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">People by Type</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  Attorneys
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {peopleStats.attorneys}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  Paralegals
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {peopleStats.paralegals}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                  Vendors
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {peopleStats.vendors}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  Project Managers
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {peopleStats.projectManagers}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  With Organization
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {peopleStats.withOrganization}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Search People</h2>
+            <span className="text-sm text-gray-500">
+              {searchTerm ? `${filteredPeople.length} of ${people.length} people` : `${people.length} total people`}
+            </span>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search people by name, email, phone, type, or organization..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {filteredPeople.length === 0 ? (
           <div className="text-center py-12">
             <User className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No people</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by adding a new person.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              {searchTerm ? 'No people found' : 'No people'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding a new person.'}
+            </p>
           </div>
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
-              {people.map((person) => (
+              {filteredPeople.map((person) => (
                 <li key={person.id}>
                   <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                     <div className="flex-1">

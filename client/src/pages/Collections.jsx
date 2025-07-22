@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Trash2, Plus, Database, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Pencil, Trash2, Plus, Database, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, MessageSquare, Search } from 'lucide-react';
 import Layout from '../components/Layout';
 import { API_BASE_URL } from '../config/api';
 
@@ -8,6 +8,31 @@ const Collections = () => {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter collections based on search term
+  const filteredCollections = collections.filter(collection => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      collection.collectionName.toLowerCase().includes(searchLower) ||
+      (collection.collectionDescription && collection.collectionDescription.toLowerCase().includes(searchLower)) ||
+      collection.status.toLowerCase().includes(searchLower) ||
+      (collection.custodian && collection.custodian.name.toLowerCase().includes(searchLower)) ||
+      (collection.matter && collection.matter.matterName.toLowerCase().includes(searchLower)) ||
+      (collection.matter && collection.matter.client && collection.matter.client.clientName.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Calculate collection status counts
+  const collectionStats = {
+    discussing: collections.filter(c => c.status === 'DISCUSSING').length,
+    scheduled: collections.filter(c => c.status === 'SCHEDULED').length,
+    inProgress: collections.filter(c => c.status === 'IN_PROGRESS').length,
+    completed: collections.filter(c => c.status === 'COMPLETED').length,
+    withCustodian: collections.filter(c => c.custodian).length
+  };
 
   useEffect(() => {
     fetchCollections();
@@ -130,7 +155,12 @@ const Collections = () => {
     <Layout>
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Collections</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Collections</h1>
+            <p className="text-gray-600">
+              Manage data collections • {collections.length} total {collections.length === 1 ? 'collection' : 'collections'}
+            </p>
+          </div>
           <Link
             to="/collections/new"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -140,11 +170,84 @@ const Collections = () => {
           </Link>
         </div>
 
-        {collections.length === 0 ? (
+        {/* Collection Status Breakdown */}
+        {collections.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Collections by Status</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  Discussing
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {collectionStats.discussing}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  Scheduled
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {collectionStats.scheduled}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                  In Progress
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {collectionStats.inProgress}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  Completed
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {collectionStats.completed}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="px-3 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  With Custodian
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {collectionStats.withCustodian}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Search Collections</h2>
+            <span className="text-sm text-gray-500">
+              {searchTerm ? `${filteredCollections.length} of ${collections.length} collections` : `${collections.length} total collections`}
+            </span>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search collections by name, description, status, custodian, or matter..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {filteredCollections.length === 0 ? (
           <div className="text-center py-12">
             <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No collections found</h3>
-            <p className="text-gray-500 mb-4">Get started by creating your first collection.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {searchTerm ? 'No collections found' : 'No collections found'}
+            </h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first collection.'}
+            </p>
             <Link
               to="/collections/new"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -156,7 +259,7 @@ const Collections = () => {
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
-              {collections.map((collection) => (
+              {filteredCollections.map((collection) => (
                 <li key={collection.id}>
                   <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                     <div className="flex items-center min-w-0 flex-1">

@@ -384,12 +384,29 @@ To host this application on your local network so other devices can access it:
 
 ## Development
 
+### Automated Production Deployment
+**NEW**: The application now includes automated production deployment that handles database schema synchronization without manual intervention.
+
+#### Build System Features:
+- ✅ **Environment Detection**: Automatically detects production environments (Render, Vercel, Heroku)
+- ✅ **Safe Database Migrations**: Uses `prisma migrate deploy` to preserve existing data
+- ✅ **Automatic Prisma Client Generation**: Ensures schema compatibility
+- ✅ **Zero Manual Setup**: No shell access required in production
+- ✅ **Error Recovery**: Graceful fallbacks if database operations fail
+
+#### Deployment Commands:
+```bash
+Build Command: npm run build
+Start Command: npm start
+```
+
 ### Database Safety in Production
 **CRITICAL**: The application includes built-in safeguards to protect production data:
 - ✅ **Safe Migrations**: Uses `prisma migrate deploy` which preserves existing data
 - ✅ **No Force Reset**: Never uses `--force-reset` flags in production
 - ✅ **Existing Database Detection**: Checks for existing data before schema operations
 - ✅ **Backup-Friendly**: Compatible with standard PostgreSQL backup/restore procedures
+- ✅ **Automated Setup**: Handles database synchronization during deployment
 
 ### Database Changes
 When modifying the Prisma schema:

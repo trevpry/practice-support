@@ -21,7 +21,7 @@
     "safety-check": "node scripts/safety-check.js",
     "backup-help": "node scripts/backup-helper.js",
     "pre-deploy": "npm run safety-check && echo 'Safety check passed - ready for deployment'",
-    "postinstall": "echo 'Dependencies will be installed individually during build'"
+    "postinstall": "npm run build"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

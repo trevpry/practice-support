@@ -1,18 +1,11 @@
 #!/usr/bin/env node
 
-// Optimized build script for memory-constrained environments like Render
+// Simplified build script for Render with memory optimization
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Starting memory-optimized build for Render...');
-
-// Force garbage collection more frequently
-if (global.gc) {
-  setInterval(() => {
-    global.gc();
-  }, 30000);
-}
+console.log('🚀 Starting Render-optimized build...');
 
 // Detect production environment
 const isProduction = process.env.NODE_ENV === 'production' || 
@@ -24,58 +17,48 @@ const isProduction = process.env.NODE_ENV === 'production' ||
 console.log(`Environment: ${isProduction ? 'Production' : 'Development'}`);
 
 try {
-  // Step 1: Install dependencies with aggressive optimization
-  console.log('📦 Installing dependencies with maximum optimization...');
+  // Step 1: Install dependencies with basic optimization
+  console.log('📦 Installing dependencies...');
   
-  const installOptions = {
+  const basicOptions = {
     stdio: 'inherit',
     env: { 
       ...process.env, 
-      NODE_OPTIONS: '--max-old-space-size=4096 --optimize-for-size',
-      NODE_ENV: 'production'
+      NODE_OPTIONS: '--max-old-space-size=4096'
     }
   };
 
-  execSync('npm --prefix client install --production=false --prefer-offline --no-audit --no-fund --no-optional', installOptions);
-  execSync('npm --prefix server install --production=false --prefer-offline --no-audit --no-fund --no-optional', installOptions);
+  execSync('npm --prefix client install --prefer-offline --no-audit --no-fund', basicOptions);
+  execSync('npm --prefix server install --prefer-offline --no-audit --no-fund', basicOptions);
 
-  // Step 2: Prisma operations with memory limits
+  // Step 2: Prisma operations
   if (isProduction) {
     console.log('🔧 Setting up production database...');
     
-    const prismaOptions = {
-      stdio: 'inherit',
-      env: { 
-        ...process.env, 
-        NODE_OPTIONS: '--max-old-space-size=2048'
-      }
-    };
-
-    execSync('cd server && npx prisma migrate deploy', prismaOptions);
-    execSync('cd server && npx prisma generate', prismaOptions);
+    execSync('cd server && npx prisma migrate deploy', basicOptions);
+    execSync('cd server && npx prisma generate', basicOptions);
     
     console.log('✅ Database setup completed');
   }
 
-  // Step 3: Build client with maximum memory optimization
-  console.log('🏗️ Building client with maximum memory optimization...');
+  // Step 3: Build client with memory optimization
+  console.log('🏗️ Building client...');
   
   const buildOptions = {
     stdio: 'inherit',
     env: { 
       ...process.env, 
-      NODE_OPTIONS: '--max-old-space-size=5120 --optimize-for-size',
+      NODE_OPTIONS: '--max-old-space-size=5120',
       CI: 'true',
       GENERATE_SOURCEMAP: 'false',
       INLINE_RUNTIME_CHUNK: 'false',
-      IMAGE_INLINE_SIZE_LIMIT: '0',
-      FAST_REFRESH: 'false'
+      IMAGE_INLINE_SIZE_LIMIT: '0'
     }
   };
 
   execSync('npm --prefix client run build', buildOptions);
 
-  // Step 4: Copy build files efficiently
+  // Step 4: Copy build files
   console.log('📋 Copying build files...');
   
   const publicDir = path.join(__dirname, '..', 'server', 'public');
@@ -86,17 +69,34 @@ try {
   }
 
   if (fs.existsSync(clientBuildDir)) {
-    // Use efficient file copying
-    execSync(`cp -r "${clientBuildDir}"/* "${publicDir}"/`, { stdio: 'inherit' });
+    // Simple file copying for cross-platform compatibility
+    const copyRecursive = (src, dest) => {
+      const stats = fs.statSync(src);
+      if (stats.isDirectory()) {
+        if (!fs.existsSync(dest)) {
+          fs.mkdirSync(dest, { recursive: true });
+        }
+        const files = fs.readdirSync(src);
+        files.forEach(file => {
+          copyRecursive(path.join(src, file), path.join(dest, file));
+        });
+      } else {
+        fs.copyFileSync(src, dest);
+      }
+    };
+
+    const files = fs.readdirSync(clientBuildDir);
+    files.forEach(file => {
+      const srcPath = path.join(clientBuildDir, file);
+      const destPath = path.join(publicDir, file);
+      copyRecursive(srcPath, destPath);
+    });
   }
 
-  console.log('🎉 Memory-optimized build completed successfully!');
+  console.log('🎉 Render build completed successfully!');
   
 } catch (error) {
   console.error('❌ Build failed:', error.message);
-  console.error('💡 Memory optimization tips for Render:');
-  console.error('   - Try reducing Node.js memory allocation');
-  console.error('   - Consider using a smaller build process');
-  console.error('   - Check for memory leaks in dependencies');
+  console.error('💡 Try using the minimal build command: npm run build:minimal');
   process.exit(1);
 }

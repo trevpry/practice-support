@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Starting build process...');
+console.log('🚀 Starting optimized build process...');
 
 // Check if we're in production environment
 const isProduction = process.env.NODE_ENV === 'production' || 
@@ -15,26 +15,40 @@ const isProduction = process.env.NODE_ENV === 'production' ||
 
 console.log(`Environment: ${isProduction ? 'Production' : 'Development'}`);
 
-try {
-  // Install client dependencies
-  console.log('📦 Installing client dependencies...');
-  execSync('npm --prefix client install', { stdio: 'inherit' });
+// Memory optimization for Render deployment
+const maxOldSpaceSize = isProduction ? '--max-old-space-size=6144' : '';
 
-  // Install server dependencies
-  console.log('📦 Installing server dependencies...');
-  execSync('npm --prefix server install', { stdio: 'inherit' });
+try {
+  // Install dependencies with memory optimization
+  console.log('📦 Installing client dependencies with memory optimization...');
+  execSync(`npm --prefix client install --prefer-offline --no-audit --no-fund`, { 
+    stdio: 'inherit',
+    env: { ...process.env, NODE_OPTIONS: maxOldSpaceSize }
+  });
+
+  console.log('📦 Installing server dependencies with memory optimization...');
+  execSync(`npm --prefix server install --prefer-offline --no-audit --no-fund`, { 
+    stdio: 'inherit',
+    env: { ...process.env, NODE_OPTIONS: maxOldSpaceSize }
+  });
 
   // Production-specific database setup
   if (isProduction) {
     console.log('🔧 Production environment detected - setting up database...');
     
-    // Deploy migrations safely (preserves data)
+    // Deploy migrations safely (preserves data) with memory optimization
     console.log('📊 Deploying database migrations...');
-    execSync('cd server && npx prisma migrate deploy', { stdio: 'inherit' });
+    execSync('cd server && npx prisma migrate deploy', { 
+      stdio: 'inherit',
+      env: { ...process.env, NODE_OPTIONS: maxOldSpaceSize }
+    });
     
-    // Generate Prisma client
+    // Generate Prisma client with memory optimization
     console.log('⚙️ Generating Prisma client...');
-    execSync('cd server && npx prisma generate', { stdio: 'inherit' });
+    execSync('cd server && npx prisma generate', { 
+      stdio: 'inherit',
+      env: { ...process.env, NODE_OPTIONS: maxOldSpaceSize }
+    });
     
     console.log('✅ Production database setup completed');
   } else {
@@ -47,9 +61,18 @@ try {
     }
   }
 
-  // Build client
-  console.log('🏗️ Building client...');
-  execSync('npm --prefix client run build', { stdio: 'inherit' });
+  // Build client with memory optimization and CI optimizations
+  console.log('🏗️ Building client with memory optimization...');
+  execSync('npm --prefix client run build', { 
+    stdio: 'inherit',
+    env: { 
+      ...process.env, 
+      NODE_OPTIONS: maxOldSpaceSize,
+      CI: 'true',
+      GENERATE_SOURCEMAP: 'false',
+      INLINE_RUNTIME_CHUNK: 'false'
+    }
+  });
 
   // Development database migration (skip on Windows and production)
   if (!isProduction && process.platform !== 'win32') {

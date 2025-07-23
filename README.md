@@ -393,12 +393,27 @@ To host this application on your local network so other devices can access it:
 - ✅ **Automatic Prisma Client Generation**: Ensures schema compatibility
 - ✅ **Zero Manual Setup**: No shell access required in production
 - ✅ **Error Recovery**: Graceful fallbacks if database operations fail
+- ✅ **Memory Optimization**: Special build process for memory-constrained environments
 
 #### Deployment Commands:
 ```bash
+# Standard deployment
 Build Command: npm run build
 Start Command: npm start
+
+# For memory-constrained environments (Render)
+Build Command: npm run build:render
+Start Command: npm start
+
+# Minimal deployment (fallback)
+Build Command: npm run build:minimal
+Start Command: npm start
 ```
+
+#### Render Deployment Notes:
+- **Memory Optimization**: Use `npm run build:render` for Render's 8GB memory limit
+- **Build Settings**: Optimized for Render's build environment with aggressive memory management
+- **Fallback Options**: Multiple build strategies available if memory issues persist
 
 ### Database Safety in Production
 **CRITICAL**: The application includes built-in safeguards to protect production data:

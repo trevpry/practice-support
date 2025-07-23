@@ -34,6 +34,16 @@ const Tasks = () => {
     fetchMatters();
   }, []);
 
+  // Update form data when current user is loaded
+  useEffect(() => {
+    if (currentUser && currentUser.person && !editingTask) {
+      setFormData(prevData => ({
+        ...prevData,
+        ownerId: currentUser.person.id.toString()
+      }));
+    }
+  }, [currentUser, editingTask]);
+
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/current-user`);
@@ -108,17 +118,29 @@ const Tasks = () => {
         ? parseInt(formData.ownerId)
         : (currentUser && currentUser.person ? currentUser.person.id : parseInt(formData.ownerId));
       
+      // Validate that we have a valid ownerId
+      if (!ownerId || isNaN(ownerId)) {
+        alert('Error: No valid owner found. Please ensure you are logged in and linked to a person.');
+        console.error('Invalid ownerId:', ownerId, 'Current user:', currentUser, 'Form ownerId:', formData.ownerId);
+        return;
+      }
+      
+      const requestBody = {
+        ...formData,
+        matterId: formData.matterId || null,
+        ownerId: ownerId,
+        assigneeIds: formData.assigneeIds.map(id => parseInt(id))
+      };
+      
+      console.log('Submitting task with data:', requestBody);
+      console.log('Current user:', currentUser);
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          matterId: formData.matterId || null,
-          ownerId: ownerId,
-          assigneeIds: formData.assigneeIds.map(id => parseInt(id))
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -126,10 +148,13 @@ const Tasks = () => {
         setShowModal(false);
         resetForm();
       } else {
-        console.error('Failed to save task');
+        const errorData = await response.text();
+        console.error('Failed to save task. Status:', response.status, 'Response:', errorData);
+        alert(`Failed to save task: ${response.status} - ${errorData}`);
       }
     } catch (error) {
       console.error('Error saving task:', error);
+      alert(`Error saving task: ${error.message}`);
     }
   };
 

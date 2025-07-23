@@ -110,8 +110,11 @@ const createTask = async (req, res) => {
   try {
     const { title, description, status, priority, dueDate, matterId, ownerId, assigneeIds } = req.body;
 
+    console.log('Creating task with data:', { title, description, status, priority, dueDate, matterId, ownerId, assigneeIds });
+
     // Validate required fields
     if (!title || !ownerId) {
+      console.error('Validation failed: Missing title or ownerId');
       return res.status(400).json({ error: 'Title and owner are required' });
     }
 
@@ -121,7 +124,8 @@ const createTask = async (req, res) => {
     });
 
     if (!owner) {
-      return res.status(400).json({ error: 'Invalid owner ID' });
+      console.error('Validation failed: Owner not found for ID:', ownerId);
+      return res.status(400).json({ error: `Invalid owner ID: ${ownerId}` });
     }
 
     // Verify matter exists if provided
@@ -189,10 +193,11 @@ const createTask = async (req, res) => {
       },
     });
 
+    console.log('Task created successfully:', task.id);
     res.status(201).json(task);
   } catch (error) {
     console.error('Error creating task:', error);
-    res.status(500).json({ error: 'Failed to create task' });
+    res.status(500).json({ error: 'Failed to create task', details: error.message });
   }
 };
 

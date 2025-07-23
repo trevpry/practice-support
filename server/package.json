@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "deploy": "node scripts/deploy.js",
+    "fix": "node scripts/fix-production.js",
     "db:setup": "node scripts/setup-db.js",
     "db:migrate": "node scripts/migrate.js",
     "db:migrate:dev": "prisma migrate dev",

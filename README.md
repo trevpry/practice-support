@@ -384,12 +384,21 @@ To host this application on your local network so other devices can access it:
 
 ## Development
 
+### Database Safety in Production
+**CRITICAL**: The application includes built-in safeguards to protect production data:
+- ✅ **Safe Migrations**: Uses `prisma migrate deploy` which preserves existing data
+- ✅ **No Force Reset**: Never uses `--force-reset` flags in production
+- ✅ **Existing Database Detection**: Checks for existing data before schema operations
+- ✅ **Backup-Friendly**: Compatible with standard PostgreSQL backup/restore procedures
+
 ### Database Changes
 When modifying the Prisma schema:
 ```bash
 cd server
 npx prisma migrate dev --name "description-of-change"
 ```
+
+**Production Deployment**: Schema changes are automatically applied safely during deployment without data loss.
 
 ### Adding New Features
 1. Update database schema if needed (Prisma)

@@ -1,5 +1,15 @@
 # Render Deployment Guide
 
+## ⚠️ CRITICAL DATABASE SAFETY WARNING
+
+**The production database will be preserved during deployments.** The migration script has been updated to use safe migration practices that protect your data.
+
+### Database Safety Features:
+- ✅ Uses `prisma migrate deploy` for existing databases (preserves data)
+- ✅ Uses `prisma db push` (without force-reset) for new databases only
+- ✅ Checks for existing database before applying schema changes
+- ❌ Never uses `--force-reset` in production
+
 ## Prerequisites
 - GitHub repository with your code
 - Render account (free tier available)

@@ -18,6 +18,9 @@
     "db:migrate": "npm --prefix server run db:migrate",
     "db:migrate:dev": "cd server && npx prisma migrate dev",
     "db:setup": "npm --prefix server run db:setup",
+    "safety-check": "node scripts/safety-check.js",
+    "backup-help": "node scripts/backup-helper.js",
+    "pre-deploy": "npm run safety-check && echo 'Safety check passed - ready for deployment'",
     "postinstall": "echo 'Dependencies will be installed individually during build'"
   },
   "devDependencies": {
